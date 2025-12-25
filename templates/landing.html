@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>FinWiz Lite – Manage money, made simple</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
+</head>
+<body class="bg-gradient-to-r from-green-50 to-teal-50 min-h-screen flex flex-col">
+  <nav class="flex items-center justify-between px-8 py-4 bg-white shadow">
+    <div class="flex items-center space-x-2">
+      <div class="w-8 h-8 rounded-full bg-green-500 flex items-center justify-center text-white font-bold">
+        F
+      </div>
+      <span class="text-xl font-semibold text-gray-800">FinWiz Lite</span>
+    </div>
+    <div class="space-x-4">
+      <a href="{{ url_for('login') }}" class="text-sm text-gray-700 hover:text-green-600">Sign in</a>
+      <a href="{{ url_for('signup') }}" class="text-sm bg-green-600 text-white px-4 py-2 rounded shadow hover:bg-green-700">
+        Sign up for free
+      </a>
+
+    </div>
+  </nav>
+
+  <main class="flex-1 flex items-center justify-center px-8 mt-24 mb-16">
+    <div class="max-w-6xl w-full grid md:grid-cols-2 gap-8 items-center">
+      <div>
+        <h1 class="text-4xl md:text-5xl font-bold text-green-800 mb-8">
+          Managing money,<br />made simple.
+        </h1>
+        <p class="text-gray-700 mb-6">
+          Upload your bank statements and get clear summaries, insights, and trends in seconds.
+        </p>
+        <a href="{{ url_for('signup') }}" class="inline-block bg-green-600 text-white px-6 py-3 rounded-lg shadow hover:bg-green-700">
+          Get started – it’s free
+        </a>
+        <p class="mt-4 text-xs text-gray-500">
+          Your data stays private. Summaries are generated only for you.
+        </p>
+      </div>
+      <div class="hidden md:block">
+        <div class="bg-white rounded-3xl shadow-lg p-6">
+          <p class="text-sm font-semibold text-gray-700 mb-2">See all your money in one place</p>
+          <div class="bg-gray-50 rounded-xl p-4 mb-4">
+            <p class="text-xs text-gray-500 mb-1">This month</p>
+            <p class="text-2xl font-bold text-green-700 mb-2">₹72,450</p>
+            <p class="text-xs text-gray-500">Net savings after income and expenses</p>
+          </div>
+          <p class="text-xs text-gray-500">
+            FinWiz Lite is a learning project inspired by modern finance apps.
+          </p>
+        </div>
+      </div>
+    </div>
+  </main>
+  <div>
+    <!-- How it works -->
+<section class="mt-16 max-w-5xl mx-auto px-4">
+  <h2 class="text-2xl md:text-3xl font-bold text-gray-900 mb-6">
+    How FinWiz Lite summarizer works
+  </h2>
+  <div class="flex flex-col space-y-4 text-sm text-gray-700">
+
+    <div class="bg-white shadow-sm rounded-xl p-5">
+      <p class="text-xs font-semibold text-green-600 mb-2">Step 1</p>
+      <h3 class="font-semibold mb-2">Upload your statement</h3>
+      <p>
+        Upload a bank statement or financial PDF from your device.
+        The app extracts text from each page and detects transactions.
+      </p>
+    </div>
+    <div class="bg-white shadow-sm rounded-xl p-5">
+      <p class="text-xs font-semibold text-green-600 mb-2">Step 2</p>
+      <h3 class="font-semibold mb-2">Auto‑categorize spending</h3>
+      <p>
+        Simple rules classify transactions into salary, rent, EMI, food,
+        shopping, insurance and more, so you see where your money goes.
+      </p>
+    </div>
+    <div class="bg-white shadow-sm rounded-xl p-5">
+      <p class="text-xs font-semibold text-green-600 mb-2">Step 3</p>
+      <h3 class="font-semibold mb-2">Generate clear summary</h3>
+      <p>
+        The dashboard shows total income, expenses, net savings and a
+        human‑readable summary you can download as a PDF.
+      </p>
+    </div>
+  </div>
+</section>
+  </div>
+  <div>
+    <!-- FAQ -->
+<section class="mt-16 max-w-5xl mx-auto px-4 mb-16">
+  <h2 class="text-2xl md:text-3xl font-bold text-gray-900 mb-6">
+    Frequently asked questions
+  </h2>
+  <div class="space-y-4 text-sm text-gray-700">
+
+    <details class="bg-white rounded-xl shadow-sm p-4">
+      <summary class="font-semibold cursor-pointer">
+        What types of files can I upload?
+      </summary>
+      <p class="mt-2 text-gray-600">
+        FinWiz Lite is optimized for bank statements and financial PDFs.
+        Other PDF documents may work, but results are best when the text
+        is clearly selectable, not scanned images.
+      </p>
+    </details>
+
+    <details class="bg-white rounded-xl shadow-sm p-4">
+      <summary class="font-semibold cursor-pointer">
+        Is my financial data safe?
+      </summary>
+      <p class="mt-2 text-gray-600">
+        Your files are stored only in your account area. They are used to
+        compute summaries and analytics for you, and you can delete them
+        from your dashboard at any time.
+      </p>
+    </details>
+
+    <details class="bg-white rounded-xl shadow-sm p-4">
+      <summary class="font-semibold cursor-pointer">
+        Does the tool change any numbers in my statement?
+      </summary>
+      <p class="mt-2 text-gray-600">
+        No. The app only reads amounts and descriptions to calculate
+        totals and categories. It does not modify the original document.
+      </p>
+    </details>
+
+    <details class="bg-white rounded-xl shadow-sm p-4">
+      <summary class="font-semibold cursor-pointer">
+        Can I download or share the summary?
+      </summary>
+      <p class="mt-2 text-gray-600">
+        Yes. After processing, you can download a PDF summary from your
+        dashboard, and Pro plans can export detailed CSV data.
+      </p>
+    </details>
+
+    <details class="bg-white rounded-xl shadow-sm p-4">
+      <summary class="font-semibold cursor-pointer">
+        Will more languages and formats be supported?
+      </summary>
+      <p class="mt-2 text-gray-600">
+        The current focus is English PDFs, but future updates will add
+        support for more formats and Indian languages.
+      </p>
+    </details>
+
+  </div>
+</section>
+  </div>
+  <footer class="bg-gray-900 text-gray-300 mt-16">
+  <div class="max-w-6xl mx-auto px-6 py-10 grid md:grid-cols-4 gap-8 text-sm">
+    <div>
+      <div class="flex items-center space-x-2 mb-3">
+        <span class="text-xl font-black text-white">FinWiz</span>
+        <span class="text-xs bg-gray-800 px-2 py-0.5 rounded-full">Lite</span>
+      </div>
+      <p class="text-xs text-gray-400">
+        Accelerate your financial understanding with AI‑powered summaries and analytics.
+      </p>
+    </div>
+    <div>
+      <h3 class="font-semibold text-white mb-2">Solutions</h3>
+      <ul class="space-y-1">
+        <li>Bank Statement Analyzer</li>
+        <li>Loan & EMI Insights</li>
+        <li>Insurance Summarizer</li>
+        <li>Document Summarizer</li>
+      </ul>
+    </div>
+    <div>
+      <h3 class="font-semibold text-white mb-2">Support</h3>
+      <ul class="space-y-1">
+        <li>Guides</li>
+        <li>FAQ</li>
+        <li>Contact</li>
+        <li>Terms of Service</li>
+        <li>Privacy Policy</li>
+      </ul>
+    </div>
+    <div>
+      <h3 class="font-semibold text-white mb-2">Company</h3>
+      <ul class="space-y-1">
+        <li>About</li>
+        <li>Blog</li>
+        <li>Careers</li>
+        <li>Press</li>
+      </ul>
+    </div>
+  </div>
+  <div class="border-t border-gray-800 text-center py-4 text-xs text-gray-500">
+    © 2025 FinWiz Lite. All rights reserved.
+  </div>
+</footer>
+
+</body>
+</html>

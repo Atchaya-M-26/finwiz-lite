@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Payment - FinWiz Lite</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
+</head>
+<body class="bg-gradient-to-br from-purple-50 to-pink-50 min-h-screen py-12">
+    <div class="container mx-auto px-4 max-w-md">
+        <div class="bg-white rounded-2xl shadow-2xl p-8">
+            <div class="text-center mb-8">
+                <div class="w-20 h-20 bg-green-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                    <span class="text-3xl">🛒</span>
+                </div>
+                <h1 class="text-2xl font-bold text-gray-800 mb-2">Complete Payment</h1>
+                <p class="text-gray-600">₹199 for Premium (12 months)</p>
+            </div>
+
+            <div id="loading" class="hidden text-center py-8">
+                <div class="w-12 h-12 border-4 border-purple-200 border-t-purple-500 rounded-full animate-spin mx-auto mb-4"></div>
+                <p class="text-gray-600">Processing payment...</p>
+            </div>
+
+            <form method="POST" id="paymentForm" class="space-y-6">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Payment Method</label>
+                    <div class="space-y-2">
+                        <label class="flex items-center p-3 border-2 border-gray-200 rounded-xl hover:border-purple-300 cursor-pointer">
+                            <input type="radio" name="payment_method" value="Razorpay" class="mr-3 text-purple-500" required>
+                            <div>
+                                <div class="font-semibold text-gray-900">Razorpay</div>
+                                <div class="text-xs text-gray-500">Secure UPI/Cards/Netbanking</div>
+                            </div>
+                        </label>
+                        <label class="flex items-center p-3 border-2 border-gray-200 rounded-xl hover:border-green-300 cursor-pointer">
+                            <input type="radio" name="payment_method" value="PhonePe" class="mr-3 text-green-500" required>
+                            <div>
+                                <div class="font-semibold text-gray-900">PhonePe</div>
+                                <div class="text-xs text-gray-500">UPI Payments</div>
+                            </div>
+                        </label>
+                        <label class="flex items-center p-3 border-2 border-gray-200 rounded-xl hover:border-blue-300 cursor-pointer">
+                            <input type="radio" name="payment_method" value="GPay" class="mr-3 text-blue-500" required>
+                            <div>
+                                <div class="font-semibold text-gray-900">Google Pay</div>
+                                <div class="text-xs text-gray-500">UPI Instant</div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="pt-4 border-t">
+                    <button type="submit" 
+                            class="w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white py-4 px-8 rounded-xl text-lg font-bold hover:from-purple-600 hover:to-pink-600 shadow-lg transform hover:-translate-y-1 transition-all duration-200">
+                        Pay ₹199 Now
+                    </button>
+                </div>
+            </form>
+
+            <div class="mt-6 p-4 bg-green-50 border border-green-100 rounded-xl">
+                <p class="text-xs text-green-800 text-center">
+                    ✅ 100% Secure • Instant Activation • Cancel Anytime
+                </p>
+            </div>
+        </div>
+
+        <div class="mt-8 text-center">
+            <a href="{{ url_for('dashboard') }}" class="text-gray-500 hover:text-gray-700 text-sm">← Back to Dashboard</a>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('paymentForm').addEventListener('submit', function(e) {
+            const form = this;
+            const loading = document.getElementById('loading');
+            const button = form.querySelector('button[type="submit"]');
+            
+            // Show loading
+            loading.classList.remove('hidden');
+            button.innerHTML = 'Processing...';
+            button.disabled = true;
+            
+            // Simulate 3 second payment processing
+            setTimeout(() => {
+                form.submit();
+            }, 3000);
+        });
+    </script>
+</body>
+</html>

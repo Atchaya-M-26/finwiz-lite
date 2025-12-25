@@ -1,83 +1,148 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FinWiz Lite - AI Financial Summary</title>
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-    <link href="{{ url_for('static', filename='style.css') }}" rel="stylesheet">
+  <meta charset="UTF-8" />
+  <title>FinWiz Lite</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
 </head>
-<body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen">
-    <div class="container mx-auto px-4 py-8">
-        <div class="text-center mb-12">
-            <h1 class="text-5xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-4">
-                FinWiz Lite
-            </h1>
-            <p class="text-xl text-gray-600">AI-powered financial document summarizer</p>
+<body class="bg-gray-100">
+  <div class="container mx-auto px-4 py-8">
+    <h1 class="text-4xl font-bold text-center mb-2">FinWiz Lite</h1>
+    <p class="text-center text-gray-600 mb-8">AI-powered financial PDF summarizer</p>
+
+    <!-- Upload + options -->
+    <form method="POST" enctype="multipart/form-data" class="bg-white rounded-xl shadow p-6 mb-8">
+      <div class="grid md:grid-cols-2 gap-4 mb-4">
+        <div>
+          <label class="block text-sm font-semibold mb-1">Language</label>
+          <select name="language" class="w-full border rounded px-3 py-2">
+            <option value="en" {% if style %}{% endif %}>English</option>
+            <option value="ta">தமிழ்</option>
+            <option value="hi">हिंदी</option>
+          </select>
         </div>
 
-        <div class="max-w-4xl mx-auto">
-            <!-- Language Selector -->
-            <div class="bg-white rounded-2xl shadow-xl p-8 mb-8">
-                <form method="POST" enctype="multipart/form-data">
-                    <div class="flex flex-col md:flex-row gap-4 items-center justify-center mb-8">
-                        <select name="language" class="px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500">
-                            <option value="en">English 🇺🇸</option>
-                            <option value="ta">தமிழ் 🇮🇳</option>
-                            <option value="hi">हिंदी 🇮🇳</option>
-                        </select>
-                        <input type="file" name="file" accept=".pdf" class="file-input px-6 py-3 border-2 border-dashed border-gray-300 rounded-xl hover:border-blue-400 transition duration-300 cursor-pointer">
-                        <button type="submit" class="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-8 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300">
-                            Analyze PDF
-                        </button>
-                    </div>
-                </form>
-            </div>
-
-            {% if summary_en %}
-            <!-- Summary Cards -->
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div class="bg-white rounded-2xl shadow-xl p-8 hover:shadow-2xl transition-all duration-300">
-                    <h3 class="text-2xl font-bold text-gray-800 mb-4 flex items-center">
-                        🇺🇸 English
-                    </h3>
-                    <div class="bg-gray-50 p-6 rounded-xl h-64 overflow-y-auto">
-                        {{ summary_en|replace('\n', '<br>')|safe }}
-                    </div>
-                    <a href="{{ url_for('download_summary', filename=filename, lang='en') }}" 
-                       class="block mt-4 bg-green-500 text-white text-center py-3 rounded-xl font-semibold hover:bg-green-600 transition duration-300">
-                        📥 Download PDF
-                    </a>
-                </div>
-
-                <div class="bg-white rounded-2xl shadow-xl p-8 hover:shadow-2xl transition-all duration-300">
-                    <h3 class="text-2xl font-bold text-gray-800 mb-4 flex items-center">
-                        🇮🇳 தமிழ்
-                    </h3>
-                    <div class="bg-gray-50 p-6 rounded-xl h-64 overflow-y-auto">
-                        {{ summary_ta|replace('\n', '<br>')|safe }}
-                    </div>
-                    <a href="{{ url_for('download_summary', filename=filename, lang='ta') }}" 
-                       class="block mt-4 bg-green-500 text-white text-center py-3 rounded-xl font-semibold hover:bg-green-600 transition duration-300">
-                        📥 Download PDF
-                    </a>
-                </div>
-
-                <div class="bg-white rounded-2xl shadow-xl p-8 hover:shadow-2xl transition-all duration-300">
-                    <h3 class="text-2xl font-bold text-gray-800 mb-4 flex items-center">
-                        🇮🇳 हिंदी
-                    </h3>
-                    <div class="bg-gray-50 p-6 rounded-xl h-64 overflow-y-auto">
-                        {{ summary_hi|replace('\n', '<br>')|safe }}
-                    </div>
-                    <a href="{{ url_for('download_summary', filename=filename, lang='hi') }}" 
-                       class="block mt-4 bg-green-500 text-white text-center py-3 rounded-xl font-semibold hover:bg-green-600 transition duration-300">
-                        📥 Download PDF
-                    </a>
-                </div>
-            </div>
-            {% endif %}
+        <div>
+          <label class="block text-sm font-semibold mb-1">Style</label>
+          <div class="flex space-x-4">
+            <label><input type="radio" name="style" value="simple" {% if style=='simple' %}checked{% endif %}> Simple</label>
+            <label><input type="radio" name="style" value="analyst" {% if style=='analyst' %}checked{% endif %}> Analyst</label>
+          </div>
         </div>
+      </div>
+
+      <div class="mb-4">
+        <label class="block text-sm font-semibold mb-1">Summary mode</label>
+        <div class="flex space-x-4">
+          <label><input type="radio" name="mode" value="quick" {% if mode=='quick' %}checked{% endif %}> Quick</label>
+          <label><input type="radio" name="mode" value="detailed" {% if mode=='detailed' %}checked{% endif %}> Detailed</label>
+          <label><input type="radio" name="mode" value="loan" {% if mode=='loan' %}checked{% endif %}> Loan / Insurance</label>
+        </div>
+      </div>
+
+      <div class="mb-4">
+        <label class="block text-sm font-semibold mb-1">Upload PDF</label>
+        <input type="file" name="file" accept=".pdf" class="w-full border rounded px-3 py-2" />
+      </div>
+
+      <button type="submit" class="bg-blue-600 text-white px-6 py-2 rounded shadow">
+        Analyze PDF
+      </button>
+
+      {% with messages = get_flashed_messages() %}
+        {% if messages %}
+          <div class="mt-4 text-red-600 text-sm">
+          {% for m in messages %}
+            <p>{{ m }}</p>
+          {% endfor %}
+          </div>
+        {% endif %}
+      {% endwith %}
+    </form>
+
+    <!-- Recent files -->
+    {% if recent_files %}
+    <div class="bg-white rounded-xl shadow p-4 mb-8">
+      <h2 class="text-lg font-semibold mb-2">Recent uploads</h2>
+      <form method="POST" class="flex flex-wrap gap-2">
+        {% for f in recent_files %}
+          <button name="open_recent" value="{{ f }}" class="px-3 py-1 border rounded text-sm hover:bg-gray-100">
+            {{ f }}
+          </button>
+        {% endfor %}
+      </form>
     </div>
+    {% endif %}
+
+    <!-- Analytics -->
+    {% if analytics %}
+    <div class="grid md:grid-cols-3 gap-4 mb-8">
+      <div class="bg-white rounded-xl shadow p-4">
+        <h3 class="font-semibold mb-2">Totals</h3>
+        <p>Income: ₹{{ analytics.total_income }}</p>
+        <p>Expenses: ₹{{ analytics.total_expense }}</p>
+        <p>Net savings: ₹{{ analytics.net_savings }}</p>
+      </div>
+      <div class="bg-white rounded-xl shadow p-4 md:col-span-2">
+        <h3 class="font-semibold mb-2">Expenses by category</h3>
+        {% if analytics.by_category %}
+          <ul class="text-sm">
+            {% for cat, amt in analytics.by_category.items() %}
+              <li>{{ cat }} – ₹{{ amt }}</li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <p class="text-sm text-gray-500">No categorized expenses detected.</p>
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Summaries -->
+    {% if summary_en %}
+    <div class="grid md:grid-cols-3 gap-4">
+      <div class="bg-white rounded-xl shadow p-4">
+        <h3 class="font-semibold mb-2">English</h3>
+        <div class="text-sm whitespace-pre-wrap max-h-80 overflow-y-auto">
+          {{ summary_en }}
+        </div>
+        {% if filename %}
+        <a href="{{ url_for('download_summary', lang='en', filename=filename) }}"
+           class="mt-3 inline-block text-sm bg-green-600 text-white px-4 py-1 rounded">
+          Download PDF
+        </a>
+        {% endif %}
+      </div>
+
+      <div class="bg-white rounded-xl shadow p-4">
+        <h3 class="font-semibold mb-2">தமிழ்</h3>
+        <div class="text-sm whitespace-pre-wrap max-h-80 overflow-y-auto">
+          {{ summary_ta }}
+        </div>
+        {% if filename %}
+        <a href="{{ url_for('download_summary', lang='ta', filename=filename) }}"
+           class="mt-3 inline-block text-sm bg-green-600 text-white px-4 py-1 rounded">
+          Download PDF
+        </a>
+        {% endif %}
+      </div>
+
+      <div class="bg-white rounded-xl shadow p-4">
+        <h3 class="font-semibold mb-2">हिंदी</h3>
+        <div class="text-sm whitespace-pre-wrap max-h-80 overflow-y-auto">
+          {{ summary_hi }}
+        </div>
+        {% if filename %}
+        <a href="{{ url_for('download_summary', lang='hi', filename=filename) }}"
+           class="mt-3 inline-block text-sm bg-green-600 text-white px-4 py-1 rounded">
+          Download PDF
+        </a>
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
+
+  </div>
 </body>
 </html>
