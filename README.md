@@ -1,64 +1,94 @@
-🧾 FinWiz Lite – AI Financial Document Summarizer
+FinWiz Lite - Professional PDF Finance Analyzer
+🚀 AI-powered bank statement analyzer with daily limits & premium features
 
-FinWiz Lite is a **web application** that helps users upload complex financial PDFs (bank statements, loan forms, insurance documents) and get **clear, simplified summaries** in **English, Tamil, and Hindi**.
+[![GitHub Repo](https://img.shields.io/badge/GitHub-Repo-bluehttps://github.com/Atchaya-M-26/finwiz-lite
 
-> 🚧 **Status: Work in Progress**  
-> This project is actively being built. Features, UI, and AI capabilities will keep improving over time.
+📊 PDF Bank Statement Analysis - Extracts transactions, balances, EMIs
 
- ✨ Current Features
+⚡ Daily Limits - 10 free PDFs/day | Unlimited premium
 
-- 📄 Upload financial PDFs (statements, policy docs, etc.)
-- 🔍 Extracts text from PDF using Python
-- 🧠 Generates a rule-based financial summary
-- 🌐 Multi-language support:
-  - English
-  - Tamil
-  - Hindi
-- 🎨 Modern dashboard UI with card layout
-- 📥 Download generated summary as PDF
+💰 EMI Calculator - Auto-calculates loan installments
 
- 🏗️ Tech Stack
+📁 Archive & Delete - Manage analysis history
 
-- **Frontend**: HTML, Tailwind CSS, Jinja2 templates  
-- **Backend**: Python, Flask  
-- **PDF Processing**: `pdfplumber`, `reportlab`  
-- **Translation**: `googletrans` (experimental)  
+🔒 Secure - No data stored beyond session (except archive)
 
- 🚀 How to Run Locally
-
-1. **Clone the repository**
+🎯 Demo
+text
+Upload PDF → AI extracts: Income, Expenses, Savings Rate, EMIs
+Daily Limit: 10 Free | Unlimited Premium
+🚀 Quick Start (1 minute)
+bash
+# 1. Clone
 git clone https://github.com/Atchaya-M-26/finwiz-lite.git
 cd finwiz-lite
 
-2. **Create virtual environment (optional but recommended)**
-python -m venv venv
-
-Windows:
-venv\Scripts\activate
-
-3. **Install dependencies**
+# 2. Install
 pip install -r requirements.txt
 
-4. **Run the app**
+# 3. Run
 python app.py
 
-5. Open browser and go to:
+# 4. Open browser
 http://127.0.0.1:5000
+📋 Tech Stack
+text
+Backend: Flask + MongoDB
+AI: pdfplumber, pandas, numpy
+Frontend: HTML/CSS/JS (Bootstrap)
+Deployment: Ready for Render/Heroku/Vercel
+🛠️ File Structure
+text
+finwiz-lite/
+├── app.py              # Main Flask app + routes
+├── ai_service.py       # PDF extraction + EMI calculator
+├── models.py           # MongoDB user/analysis models
+├── requirements.txt    # 15+ packages
+├── templates/          # Dashboard, landing pages
+├── static/             # CSS/JS
+├── .gitignore          # Excludes venv/uploads
+└── README.md           # This file!
+🔑 Environment Variables
+bash
+# .env file (create locally, don't commit)
+MONGODB_URI=mongodb://localhost:27017/finwiz
+SECRET_KEY=your-secret-key-here
+🌐 Deploy to Production
+Render.com (Free)
+Push to GitHub ✅ (Done!)
 
- 📌 Roadmap / To‑Do
+render.com → New Web Service → Connect GitHub repo
 
-- [ ] Integrate real AI summarization (LLM-based) for smarter insights  
-- [ ] Improve financial pattern detection (accounts, balances, transactions)  
-- [ ] Add OCR support for scanned PDFs  
-- [ ] Add proper error handling and user messages  
-- [ ] Write tests and documentation  
-- [ ] Deploy to a cloud platform for live demo  
+Build: pip install -r requirements.txt
 
-🤝 Contributions & Feedback
+Start: python app.py
 
-This is a learning/project-in-progress repo. Suggestions, issues, and ideas are welcome.  
-You can open an **Issue** or a **Pull Request** if you have improvements.
+Heroku
+bash
+heroku create finwiz-lite
+git push heroku main
+📈 Premium Features
+Free	Premium
+10 PDFs/day	Unlimited
+Basic analysis	EMI calculator
+No archive	Full archive/delete
+🤝 Contributing
+Fork repo
 
- 📩 Contact
-If you want to discuss this project, share feedback, or suggest features, feel free to reach out via GitHub.
-Thanks for checking out **FinWiz Lite** – more improvements are coming soon!
+git checkout -b feature-branch
+
+git add . && git commit -m "Add feature"
+
+git push origin feature-branch
+
+Open PR!
+
+📄 License
+MIT - Free for commercial use
+
+👩‍💻 Author
+Atchaya M - Full Stack Developer
+GitHub | Portfolio
+
+⭐ Star this repo if it helps!
+Deploy live in 2 minutes → http://your-app.render.com
