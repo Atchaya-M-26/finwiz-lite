@@ -191,7 +191,7 @@
       {% endif %}
 
       {% if analytics %}
-      <!-- PREMIUM ANALYTICS SECTION -->
+      <!-- ANALYTICS SECTION -->
       <div class="space-y-4">
         <!-- Totals Card -->
         <div class="bg-white rounded-xl shadow p-6">
@@ -214,40 +214,37 @@
           </div>
         </div>
 
-        <!-- PREMIUM CHARTS & CATEGORIES -->
-        {% if user.is_premium %}
-          {% if analytics.by_category %}
-          <div class="bg-white rounded-xl shadow p-6">
-            <h3 class="font-semibold mb-4 text-sm uppercase tracking-wide text-gray-500">Expenses by Category</h3>
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <div>
-                <canvas id="expenseChart" height="250"></canvas>
-              </div>
-              <div class="space-y-2">
-                <ul class="text-sm space-y-1">
-                  {% for cat, amt in analytics.by_category.items() %}
-                    <li class="flex justify-between py-1">
-                      <span class="font-medium">{{ cat }}</span>
-                      <span class="font-mono font-bold text-green-600">₹{{ amt }}</span>
-                    </li>
-                  {% endfor %}
-                </ul>
-              </div>
+        <!-- CHARTS & CATEGORIES -->
+        {% if analytics.by_category %}
+        <div class="bg-white rounded-xl shadow p-6">
+          <h3 class="font-semibold mb-4 text-sm uppercase tracking-wide text-gray-500">📊 Expenses by Category</h3>
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div>
+              <canvas id="expenseChart" height="250"></canvas>
+            </div>
+            <div class="space-y-2">
+              <ul class="text-sm space-y-1">
+                {% for cat, amt in analytics.by_category.items() %}
+                  <li class="flex justify-between py-1">
+                    <span class="font-medium">{{ cat }}</span>
+                    <span class="font-mono font-bold text-green-600">₹{{ amt }}</span>
+                  </li>
+                {% endfor %}
+              </ul>
             </div>
           </div>
-          {% endif %}
+        </div>
         {% endif %}
 
         <!-- CHATBOT SECTION -->
-        {% if filename %}
         <div class="bg-white rounded-xl shadow p-6">
-          <h3 class="font-semibold mb-4 text-sm uppercase tracking-wide text-gray-500">💬 Ask Questions About Your Document</h3>
+          <h3 class="font-semibold mb-4 text-sm uppercase tracking-wide text-gray-500">💬 AI Financial Assistant</h3>
           <div class="space-y-3">
             <!-- Chat Messages -->
             <div id="chatMessages" class="border rounded-lg bg-gray-50 p-4 h-64 overflow-y-auto space-y-3">
               <div class="flex justify-start">
                 <div class="bg-gray-200 text-gray-800 px-3 py-2 rounded-lg max-w-xs text-sm">
-                  Hi! Ask me about your income, expenses, categories, or any financial question.
+                  Hi! Upload a PDF file above and then ask me about your income, expenses, categories, or any financial question. 💡
                 </div>
               </div>
             </div>
@@ -268,7 +265,6 @@
             </div>
           </div>
         </div>
-        {% endif %}
       </div>
       {% endif %}
     </section>
@@ -357,8 +353,8 @@
       }
     });
 
-    // Premium Chart (only if premium and analytics exist)
-    {% if user.is_premium and analytics and analytics.by_category %}
+    // Chart for analytics (show for all users)
+    {% if analytics and analytics.by_category %}
       const ctx = document.getElementById('expenseChart');
       if (ctx) {
         new Chart(ctx, {

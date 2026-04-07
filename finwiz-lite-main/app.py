@@ -381,25 +381,6 @@ def archive():
     )
     return render_template("archive.html", user=user, files=archived_files)
 
-@app.route("/update_profile", methods=["POST"])
-@login_required
-def update_profile():
-    user = current_user()
-    name = request.form.get("name", user["name"]).strip()
-    preferred_lang = request.form.get("preferred_lang", user.get("preferred_lang", "en"))
-    preferred_currency = request.form.get("preferred_currency", user.get("preferred_currency", "INR"))
-    
-    users_collection.update_one(
-        {"_id": user["_id"]},
-        {"$set": {
-            "name": name,
-            "preferred_lang": preferred_lang,
-            "preferred_currency": preferred_currency
-        }}
-    )
-    flash("Profile updated successfully!")
-    return redirect(url_for("dashboard"))
-
 # VIEW FILE
 
 @app.route("/view/<file_id>")
