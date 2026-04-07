@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>FinWiz Chat - Financial Assistant</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
+</head>
+<body class="bg-gray-100 min-h-screen flex flex-col">
+  <!-- Top nav -->
+  <nav class="flex items-center justify-between px-8 py-4 bg-white shadow">
+    <div class="flex items-center space-x-2">
+      <div class="w-8 h-8 rounded-full bg-green-500 flex items-center justify-center text-white font-bold">
+        F
+      </div>
+      <span class="text-xl font-semibold text-gray-800">FinWiz Chat</span>
+    </div>
+    <div class="space-x-4">
+      <a href="{{ url_for('dashboard') }}" class="text-sm text-blue-600 hover:underline">← Back to Dashboard</a>
+    </div>
+  </nav>
+
+  <main class="flex-1 container mx-auto px-4 py-8">
+    <div class="max-w-4xl mx-auto bg-white rounded-xl shadow-lg overflow-hidden flex flex-col h-[600px]">
+      <!-- Header -->
+      <div class="bg-gradient-to-r from-green-500 to-teal-500 p-6 text-white">
+        <h2 class="text-2xl font-bold mb-2">💬 Financial Assistant</h2>
+        <p class="text-sm opacity-90">Ask me about your transactions, spending, and financial insights</p>
+      </div>
+
+      <!-- Chat Messages -->
+      <div id="chatMessages" class="flex-1 overflow-y-auto p-6 space-y-4 bg-gray-50">
+        <div class="flex justify-start">
+          <div class="bg-gray-200 text-gray-800 px-4 py-2 rounded-lg max-w-xs">
+            <p class="text-sm">👋 Hi! I'm FinWiz Chat. I can help you understand your financial documents.</p>
+            <p class="text-xs text-gray-600 mt-1">Select a file and ask me questions like:</p>
+            <ul class="text-xs text-gray-600 mt-2 space-y-1">
+              <li>• "What's my total income?"</li>
+              <li>• "What are my biggest expenses?"</li>
+              <li>• "How much did I save this month?"</li>
+              <li>• "Tell me about my spending by category"</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- Input Area -->
+      <div class="border-t bg-white p-4 space-y-3">
+        <!-- File Selection -->
+        <div class="flex gap-2">
+          <select id="fileSelect" class="flex-1 border rounded-lg px-4 py-2 text-sm focus:ring-2 focus:ring-green-500">
+            <option value="">Select a file to analyze...</option>
+            {% for f in files %}
+              <option value="{{ f._id|string }}">{{ f.original_name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <!-- Message Input -->
+        <div class="flex gap-2">
+          <input 
+            type="text" 
+            id="messageInput" 
+            placeholder="Ask a question about your finances..." 
+            class="flex-1 border rounded-lg px-4 py-2 text-sm focus:ring-2 focus:ring-green-500"
+          />
+          <button 
+            id="sendBtn"
+            class="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 font-medium transition"
+          >
+            Send
+          </button>
+        </div>
+        <p class="text-xs text-gray-500">💡 Tip: For better results, upload recent financial statements</p>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    const chatMessages = document.getElementById('chatMessages');
+    const messageInput = document.getElementById('messageInput');
+    const sendBtn = document.getElementById('sendBtn');
+    const fileSelect = document.getElementById('fileSelect');
+
+    function addMessage(text, sender = 'bot') {
+      const messageDiv = document.createElement('div');
+      messageDiv.className = `flex ${sender === 'user' ? 'justify-end' : 'justify-start'}`;
+      
+      const bubble = document.createElement('div');
+      bubble.className = sender === 'user' 
+        ? 'bg-green-500 text-white px-4 py-2 rounded-lg max-w-xs' 
+        : 'bg-gray-200 text-gray-800 px-4 py-2 rounded-lg max-w-xs';
+      
+      bubble.innerHTML = `<p class="text-sm">${text}</p>`;
+      messageDiv.appendChild(bubble);
+      chatMessages.appendChild(messageDiv);
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    sendBtn.addEventListener('click', sendMessage);
+    messageInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') sendMessage();
+    });
+
+    async function sendMessage() {
+      const question = messageInput.value.trim();
+      const fileId = fileSelect.value;
+
+      if (!question) {
+        alert('Please type a question');
+        return;
+      }
+
+      if (!fileId) {
+        alert('Please select a file first');
+        return;
+      }
+
+      // User message
+      addMessage(question, 'user');
+      messageInput.value = '';
+      sendBtn.disabled = true;
+
+      try {
+        const response = await fetch('{{ url_for("chat_api") }}', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ question, file_id: fileId })
+        });
+
+        const data = await response.json();
+        
+        if (response.ok) {
+          addMessage(data.answer, 'bot');
+        } else {
+          addMessage('❌ ' + (data.error || 'Error processing your question'), 'bot');
+        }
+      } catch (error) {
+        addMessage('❌ Connection error. Please try again.', 'bot');
+      } finally {
+        sendBtn.disabled = false;
+        messageInput.focus();
+      }
+    }
+  </script>
+</body>
+</html>

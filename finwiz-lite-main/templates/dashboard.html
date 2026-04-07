@@ -1,0 +1,441 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Dashboard – FinWiz Lite</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="bg-gray-100 min-h-screen flex flex-col">
+  <!-- Top nav -->
+  <nav class="flex items-center justify-between px-8 py-4 bg-white shadow">
+    <div class="flex items-center space-x-2">
+      <div class="w-8 h-8 rounded-full bg-green-500 flex items-center justify-center text-white font-bold">
+        F
+      </div>
+      <span class="text-xl font-semibold text-gray-800">FinWiz Lite</span>
+    </div>
+    <div class="flex items-center space-x-4 text-sm">
+      <!-- Action Buttons -->
+      <a href="{{ url_for('email_alerts') }}" 
+         class="px-3 py-1 bg-blue-500 text-white text-xs rounded-full font-bold hover:bg-blue-600 shadow-sm">
+        🔔 Alerts
+      </a>
+      <button id="profileToggle"
+              class="flex items-center space-x-2 px-3 py-1 rounded-full bg-gray-100 hover:bg-gray-200">
+        <div class="w-7 h-7 rounded-full bg-green-500 text-white flex items-center justify-center text-xs font-bold">
+          {{ user.name[0]|upper }}
+        </div>
+        <span class="text-gray-700 text-xs md:text-sm">Profile</span>
+      </button>
+    </div>
+  </nav>
+
+  <main class="flex-1">
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        <div class="container mx-auto px-4 mt-4 text-sm text-green-600">
+          {% for m in messages %}<p>{{ m }}</p>{% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+
+<!-- SECTION 1: Only upload + previous files -->
+<section class="bg-gradient-to-r from-green-50 to-teal-50 border-b">
+  <div class="container mx-auto px-4 py-8 flex justify-center">
+    <div id="analyze-block" class="w-full max-w-3xl space-y-4">
+      <div class="bg-white rounded-xl shadow p-4">
+        <h2 class="font-semibold mb-2 text-sm">Upload new statement</h2>
+        
+        
+       <form method="POST" enctype="multipart/form-data" action="{{ url_for('dashboard') }}" class="space-y-3"
+      {% if analyze_disabled %}style="opacity: 0.5; pointer-events: none;"{% endif %}>
+
+          <div>
+            <label class="block text-xs mb-1">Summary mode</label>
+            <select name="mode" class="w-full border rounded px-2 py-1 text-xs"
+                    {% if analyze_disabled %}disabled{% endif %}>
+              <option value="quick">Quick</option>
+              <option value="detailed">Detailed</option>
+              <option value="loan">Loan / Insurance</option>
+            </select>
+          </div>
+          <div>
+            <input type="file" name="file" accept=".pdf" id="fileInput"
+                   class="w-full border rounded px-2 py-1 text-xs"
+                   {% if analyze_disabled %}disabled{% endif %}/>
+          </div>
+          <button type="submit" id="uploadBtn"
+        class="w-full bg-green-600 text-white py-2 rounded text-xs hover:bg-green-700 font-medium"
+        {% if analyze_disabled %}disabled style="background:#9CA3AF;"{% endif %}>
+  Analyze PDF
+</button>
+        </form>
+
+        <div class="text-xs text-gray-500 mt-3 pt-2 border-t">
+          Files uploaded: {{ all_files_count }}
+        </div>
+      </div>
+
+      <div class="bg-white rounded-xl shadow p-4">
+        <h2 class="font-semibold mb-2 text-sm">Your previous files ({{ all_files_count }})</h2>
+        {% if files %}
+          <ul class="text-xs space-y-1 max-h-40 overflow-y-auto">
+            {% for f in files %}
+  <li class="flex items-center justify-between py-1 border-b border-gray-100 last:border-b-0">
+    <a href="{{ url_for('view_file', file_id=f._id|string) }}"
+       class="text-green-700 hover:underline text-xs truncate flex-1 mr-2">
+      {{ f.original_name }}
+    </a>
+
+    <div class="flex items-center space-x-1">
+      <!-- Archive -->
+      <form method="POST"
+            action="{{ url_for('archive_file', file_id=f._id|string) }}"
+            onsubmit="return confirm('Move this file to archive?');"
+            style="display:inline;">
+        <button class="text-gray-500 hover:text-gray-700 text-[11px] font-medium px-2 py-1 rounded hover:bg-gray-100"
+                type="submit">
+          📁 Archive
+        </button>
+      </form>
+      <!-- Delete -->
+      <form method="POST"
+            action="{{ url_for('delete_file', file_id=f._id|string) }}"
+            onsubmit="return confirm('🗑️ Delete this file permanently?');"
+            style="display:inline;">
+        <button class="text-red-500 hover:text-red-700 text-[11px] font-medium px-2 py-1 rounded hover:bg-red-50"
+                type="submit">
+          🗑️ Delete
+        </button>
+      </form>
+    </div>
+  </li>
+{% endfor %}      
+          </ul>
+        {% else %}
+          <p class="text-xs text-gray-500">No files uploaded yet.</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</section>
+
+
+    <!-- SECTION 2: Scroll-down area with PDF left / summary right -->
+    <section class="container mx-auto px-4 py-6 space-y-4">
+      {% if filename %}
+      <!-- Horizontal block like your reference UI -->
+      <div class="bg-white rounded-xl shadow p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+        <!-- Left: PDF preview -->
+        <div class="border rounded-lg overflow-hidden flex flex-col">
+          <div class="px-3 py-2 border-b text-xs font-semibold text-gray-600">
+            {{ filename }}
+          </div>
+          <div class="flex-1 bg-gray-100 min-h-[420px] flex items-center justify-center">
+            <embed src="{{ url_for('serve_file', filename=filename) }}"
+                   type="application/pdf"
+                   class="w-full h-full max-h-[420px]" />
+          </div>
+        </div>
+
+        <!-- Right: Output / Insights / Custom tabs -->
+        <div class="border rounded-lg flex flex-col h-[420px]">
+          <div class="flex border-b text-xs bg-gray-50">
+            <button type="button"
+                    class="px-4 py-2 border-b-2 border-blue-600 text-blue-600 font-semibold flex-1 text-center">
+              Output
+            </button>
+            <button type="button"
+                    class="px-4 py-2 text-gray-400 cursor-not-allowed flex-1 text-center">
+              Insights (coming soon)
+            </button>
+            <button type="button"
+                    class="px-4 py-2 text-gray-400 cursor-not-allowed flex-1 text-center">
+              Custom (coming soon)
+            </button>
+          </div>
+          <div class="flex-1 p-3 overflow-y-auto text-xs whitespace-pre-wrap bg-gray-50">
+            {% if summary_en %}
+              {{ summary_en }}
+            {% else %}
+              No summary available yet.
+            {% endif %}
+          </div>
+          {% if filename %}
+          <div class="border-t px-3 py-2 bg-white space-y-2">
+            <div class="flex gap-2">
+              <a href="{{ url_for('download_summary', filename=filename) }}"
+                 class="flex-1 text-center bg-green-600 text-white px-3 py-1.5 rounded text-xs hover:bg-green-700">
+                📥 PDF
+              </a>
+              <a href="{{ url_for('export_csv', file_id=file_id) }}"
+                 class="flex-1 text-center bg-blue-600 text-white px-3 py-1.5 rounded text-xs hover:bg-blue-700">
+                📊 CSV
+              </a>
+            </div>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+      {% else %}
+      <!-- Shown before first upload -->
+      <div class="bg-white rounded-xl shadow p-4 text-center">
+        <h3 class="font-semibold mb-2 text-sm">Analyze your first PDF</h3>
+        <p class="text-xs text-gray-600">
+          Use the upload box above to add a statement. Once analyzed, you'll see the PDF preview on the left
+          and the summary on the right in this section.
+        </p>
+      </div>
+      {% endif %}
+
+      {% if analytics %}
+      <!-- PREMIUM ANALYTICS SECTION -->
+      <div class="space-y-4">
+        <!-- Totals Card -->
+        <div class="bg-white rounded-xl shadow p-6">
+          <h3 class="font-semibold mb-4 text-sm uppercase tracking-wide text-gray-500">Totals</h3>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
+            <div>
+              <p class="text-2xl font-bold text-green-600">₹{{ analytics.total_income }}</p>
+              <p class="text-xs text-gray-500 uppercase tracking-wide">Income</p>
+            </div>
+            <div>
+              <p class="text-2xl font-bold text-red-600">₹{{ analytics.total_expense }}</p>
+              <p class="text-xs text-gray-500 uppercase tracking-wide">Expenses</p>
+            </div>
+            <div>
+              <p class="text-2xl font-bold {{ 'text-green-600' if analytics.net_savings >= 0 else 'text-red-600' }}">
+                ₹{{ analytics.net_savings }}
+              </p>
+              <p class="text-xs text-gray-500 uppercase tracking-wide">Net Savings</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- PREMIUM CHARTS & CATEGORIES -->
+        {% if user.is_premium %}
+          {% if analytics.by_category %}
+          <div class="bg-white rounded-xl shadow p-6">
+            <h3 class="font-semibold mb-4 text-sm uppercase tracking-wide text-gray-500">Expenses by Category</h3>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div>
+                <canvas id="expenseChart" height="250"></canvas>
+              </div>
+              <div class="space-y-2">
+                <ul class="text-sm space-y-1">
+                  {% for cat, amt in analytics.by_category.items() %}
+                    <li class="flex justify-between py-1">
+                      <span class="font-medium">{{ cat }}</span>
+                      <span class="font-mono font-bold text-green-600">₹{{ amt }}</span>
+                    </li>
+                  {% endfor %}
+                </ul>
+              </div>
+            </div>
+          </div>
+          {% endif %}
+        {% endif %}
+
+        <!-- CHATBOT SECTION -->
+        {% if filename %}
+        <div class="bg-white rounded-xl shadow p-6">
+          <h3 class="font-semibold mb-4 text-sm uppercase tracking-wide text-gray-500">💬 Ask Questions About Your Document</h3>
+          <div class="space-y-3">
+            <!-- Chat Messages -->
+            <div id="chatMessages" class="border rounded-lg bg-gray-50 p-4 h-64 overflow-y-auto space-y-3">
+              <div class="flex justify-start">
+                <div class="bg-gray-200 text-gray-800 px-3 py-2 rounded-lg max-w-xs text-sm">
+                  Hi! Ask me about your income, expenses, categories, or any financial question.
+                </div>
+              </div>
+            </div>
+            <!-- Input -->
+            <div class="flex gap-2">
+              <input 
+                type="text" 
+                id="chatInput" 
+                placeholder="Ask about your finances..." 
+                class="flex-1 border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500"
+              />
+              <button 
+                id="chatSendBtn"
+                class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 font-medium text-sm transition"
+              >
+                Send
+              </button>
+            </div>
+          </div>
+        </div>
+        {% endif %}
+      </div>
+      {% endif %}
+    </section>
+
+  <!-- Profile panel (unchanged) -->
+  <div id="profilePanel"
+       class="fixed top-0 right-0 h-full w-80 bg-white shadow-2xl transform translate-x-full transition-transform duration-300 z-40 flex flex-col">
+    <div class="px-4 py-3 border-b bg-gray-50 flex items-center justify-between">
+      <span class="font-semibold text-sm">Profile Settings</span>
+      <button id="profileClose" class="text-gray-400 hover:text-gray-600 text-xl">&times;</button>
+    </div>
+    
+    <form id="profileForm" action="{{ url_for('update_profile') }}" method="POST" class="p-4 space-y-4 flex-1 overflow-y-auto">
+      <div>
+        <label class="block text-xs font-medium text-gray-700 mb-1">Full Name</label>
+        <input type="text" name="name" value="{{ user.name }}" 
+               class="w-full border rounded px-2 py-1 text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent" required>
+      </div>
+      
+      <div class="grid grid-cols-2 gap-2">
+        <div>
+          <label class="block text-xs font-medium text-gray-700 mb-1">Language</label>
+          <select name="preferred_lang" class="w-full border rounded px-2 py-1 text-sm focus:ring-2 focus:ring-green-500">
+            <option value="en" {% if user.get('preferred_lang', 'en') == 'en' %}selected{% endif %}>English</option>
+            <option value="ta" {% if user.get('preferred_lang') == 'ta' %}selected{% endif %}>தமிழ்</option>
+            <option value="hi" {% if user.get('preferred_lang') == 'hi' %}selected{% endif %}>हिंदी</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-gray-700 mb-1">Currency</label>
+          <select name="preferred_currency" class="w-full border rounded px-2 py-1 text-sm focus:ring-2 focus:ring-green-500">
+            <option value="INR" {% if user.get('preferred_currency', 'INR') == 'INR' %}selected{% endif %}>₹ INR</option>
+            <option value="USD" {% if user.get('preferred_currency') == 'USD' %}selected{% endif %}>$ USD</option>
+            <option value="EUR" {% if user.get('preferred_currency') == 'EUR' %}selected{% endif %}>€ EUR</option>
+          </select>
+        </div>
+      </div>
+      
+      <button type="submit" class="w-full bg-green-600 text-white py-2 rounded text-sm hover:bg-green-700 font-medium">
+        Save Changes
+      </button>
+    </form>
+
+    <!-- Security Section -->
+    <div class="px-4 py-3 border-t bg-gray-50 space-y-2">
+      <div class="text-xs">
+        <p class="font-medium text-gray-800">Last login: {{ user.get('last_login_str', 'Never') }}</p>
+        <p class="text-gray-500 text-[10px]">Device: {{ request.user_agent.platform or 'Web Browser' }}</p>
+      
+      </div>
+      
+      <a href="{{ url_for('archive') }}" class="block text-xs text-blue-600 hover:underline py-1">📂 View Archive</a>
+      <form action="{{ url_for('logout') }}" method="GET" class="pt-2">
+        <button class="w-full bg-red-500 text-white py-2 rounded text-xs hover:bg-red-600 font-medium">
+          Sign Out
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    // Profile panel functionality
+    const profileToggle = document.getElementById('profileToggle');
+    const profilePanel = document.getElementById('profilePanel');
+    const profileClose = document.getElementById('profileClose');
+
+    if (profileToggle && profilePanel) {
+      profileToggle.addEventListener('click', (e) => {
+        e.stopPropagation();
+        profilePanel.classList.remove('translate-x-full');
+      });
+    }
+
+    if (profileClose && profilePanel) {
+      profileClose.addEventListener('click', () => {
+        profilePanel.classList.add('translate-x-full');
+      });
+    }
+
+    // Close on outside click
+    document.addEventListener('click', (e) => {
+      if (!profilePanel.contains(e.target) && 
+          e.target !== profileToggle && 
+          !profileToggle?.contains(e.target)) {
+        profilePanel.classList.add('translate-x-full');
+      }
+    });
+
+    // Premium Chart (only if premium and analytics exist)
+    {% if user.is_premium and analytics and analytics.by_category %}
+      const ctx = document.getElementById('expenseChart');
+      if (ctx) {
+        new Chart(ctx, {
+          type: 'doughnut',
+          data: {
+            labels: {{ analytics.by_category.keys()|list|tojson }},
+            datasets: [{
+              data: {{ analytics.by_category.values()|list|tojson }},
+              backgroundColor: [
+                '#10B981', '#EF4444', '#F59E0B', '#8B5CF6', '#06B6D4',
+                '#84CC16', '#F97316', '#EC4899', '#14B8A6', '#6366F1'
+              ],
+              borderWidth: 2,
+              borderColor: '#ffffff'
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                position: 'bottom'
+              }
+            }
+          }
+        });
+      }
+    {% endif %}
+
+    // Chatbot functionality
+    const chatInput = document.getElementById('chatInput');
+    const chatSendBtn = document.getElementById('chatSendBtn');
+    const chatMessages = document.getElementById('chatMessages');
+
+    if (chatInput && chatSendBtn && chatMessages) {
+      chatSendBtn.addEventListener('click', sendChatMessage);
+      chatInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') sendChatMessage();
+      });
+
+      function sendChatMessage() {
+        const question = chatInput.value.trim();
+        if (!question) return;
+
+        // Add user message
+        const userMsg = document.createElement('div');
+        userMsg.className = 'flex justify-end';
+        userMsg.innerHTML = `<div class="bg-green-500 text-white px-3 py-2 rounded-lg max-w-xs text-sm">${question}</div>`;
+        chatMessages.appendChild(userMsg);
+        chatInput.value = '';
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+
+        // Send to server
+        const fileId = '{{ file_id }}';
+        if (!fileId) return;
+
+        fetch('{{ url_for("chat_api") }}', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ question, file_id: fileId })
+        })
+        .then(res => res.json())
+        .then(data => {
+          const botMsg = document.createElement('div');
+          botMsg.className = 'flex justify-start';
+          botMsg.innerHTML = `<div class="bg-gray-200 text-gray-800 px-3 py-2 rounded-lg max-w-xs text-sm">${data.answer || 'Error processing question'}</div>`;
+          chatMessages.appendChild(botMsg);
+          chatMessages.scrollTop = chatMessages.scrollHeight;
+        })
+        .catch(err => {
+          const errMsg = document.createElement('div');
+          errMsg.className = 'flex justify-start';
+          errMsg.innerHTML = `<div class="bg-red-200 text-red-800 px-3 py-2 rounded-lg max-w-xs text-sm">Error: ${err.message}</div>`;
+          chatMessages.appendChild(errMsg);
+        });
+      }
+    }
+  </script>
+</body>
+</html>

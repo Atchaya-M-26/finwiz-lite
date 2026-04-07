@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Email Alerts - FinWiz Lite</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
+</head>
+<body class="bg-gray-100 min-h-screen flex flex-col">
+  <!-- Top nav -->
+  <nav class="flex items-center justify-between px-8 py-4 bg-white shadow">
+    <div class="flex items-center space-x-2">
+      <div class="w-8 h-8 rounded-full bg-green-500 flex items-center justify-center text-white font-bold">
+        F
+      </div>
+      <span class="text-xl font-semibold text-gray-800">FinWiz Lite</span>
+    </div>
+    <a href="{{ url_for('dashboard') }}" class="text-sm text-green-600 hover:underline">← Back to Dashboard</a>
+  </nav>
+
+  <main class="flex-1">
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        <div class="container mx-auto px-4 mt-4">
+          {% for m in messages %}
+            <div class="bg-green-100 border border-green-400 text-green-800 px-4 py-3 rounded">
+              {{ m }}
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+
+    <div class="container mx-auto px-4 py-8">
+      <div class="max-w-2xl mx-auto">
+        <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+          <!-- Header -->
+          <div class="bg-gradient-to-r from-green-600 to-green-500 p-6 text-white shadow-md">
+            <h2 class="text-2xl font-bold mb-2">🔔 Email Alerts & Notifications</h2>
+            <p class="text-sm">Get notified about large transactions and budget limits</p>
+          </div>
+
+          <!-- Content -->
+          <div class="p-8">
+            <form method="POST" class="space-y-6">
+              <!-- Current Email -->
+              <div class="bg-green-100 border-2 border-green-400 rounded-lg p-4 shadow-sm">
+                <p class="text-sm text-gray-800 font-medium">
+                  <strong>Alerts will be sent to:</strong>
+                  <span class="text-green-700 font-mono block mt-1">{{ user.email }}</span>
+                </p>
+              </div>
+
+              <!-- Large Transaction Alert -->
+              <div class="space-y-2">
+                <label class="block text-sm font-semibold text-gray-700">
+                  💸 Large Transaction Alert
+                </label>
+                <p class="text-xs text-gray-600 mb-3">
+                  Receive an email when a single transaction exceeds this amount
+                </p>
+                <div class="flex items-center gap-2">
+                  <span class="text-lg text-gray-700">₹</span>
+                  <input 
+                    type="number" 
+                    name="large_transaction" 
+                    value="{{ alert_large_transaction }}"
+                    class="flex-1 border-2 border-green-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-green-600 focus:border-green-600"
+                    min="1000"
+                    step="1000"
+                  />
+                </div>
+              </div>
+
+              <!-- Monthly Budget Limit -->
+              <div class="space-y-2">
+                <label class="block text-sm font-semibold text-gray-700">
+                  📊 Monthly Budget Limit
+                </label>
+                <p class="text-xs text-gray-600 mb-3">
+                  Receive an email when monthly expenses exceed this amount
+                </p>
+                <div class="flex items-center gap-2">
+                  <span class="text-lg text-gray-700">₹</span>
+                  <input 
+                    type="number" 
+                    name="monthly_budget" 
+                    value="{{ alert_monthly_budget }}"
+                    class="flex-1 border-2 border-green-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-green-600 focus:border-green-600"
+                    min="5000"
+                    step="5000"
+                  />
+                </div>
+              </div>
+
+              <!-- Features Description -->
+              <div class="bg-green-100 border-l-4 border-green-600 p-4 space-y-2 shadow-sm">
+                <p class="text-sm font-semibold text-green-800">✅ You'll receive alerts for:</p>
+                <ul class="text-xs text-green-900 space-y-1 ml-4 font-medium">
+                  <li>✓ Transactions exceeding large transaction threshold</li>
+                  <li>✓ Monthly spending exceeding budget limit</li>
+                  <li>✓ Unusual spending patterns</li>
+                  <li>✓ New high-value transactions</li>
+                </ul>
+              </div>
+
+              <!-- Submit Button -->
+              <div class="flex gap-3 pt-4">
+                <button 
+                  type="submit"
+                  class="bg-green-600 text-white px-8 py-3 rounded-lg hover:bg-green-700 font-bold text-base shadow-md transition transform hover:scale-105"
+                >
+                  💾 Save Alert Settings
+                </button>
+                <a 
+                  href="{{ url_for('dashboard') }}"
+                  class="bg-gray-300 text-gray-800 px-6 py-3 rounded-lg hover:bg-gray-400 font-medium transition"
+                >
+                  Cancel
+                </a>
+              </div>
+            </form>
+          </div>
+
+          <!-- Note -->
+          <div class="bg-green-100 border-t-4 border-green-600 p-6 shadow-sm">
+            <p class="text-sm text-green-900 font-medium">
+              <span class="font-bold text-green-800">ℹ️ Email Alerts:</span> Configure your alert thresholds below. Email notifications require SMTP setup (check with your administrator). Thresholds are saved and ready to use!
+            </p>
+          </div>
+        </div>
+
+        <!-- Help Section -->
+        <div class="mt-8 bg-white rounded-xl shadow p-6">
+          <h3 class="text-lg font-semibold mb-4 text-gray-800">❓ FAQ</h3>
+          <div class="space-y-4">
+            <div>
+              <p class="font-semibold text-sm text-gray-700">How often will I get alerts?</p>
+              <p class="text-xs text-gray-600">You'll receive an email immediately when a threshold is triggered.</p>
+            </div>
+            <div>
+              <p class="font-semibold text-sm text-gray-700">Can I change alert settings anytime?</p>
+              <p class="text-xs text-gray-600">Yes! Come back to this page and adjust your thresholds at any time.</p>
+            </div>
+            <div>
+              <p class="font-semibold text-sm text-gray-700">Will I get too many emails?</p>
+              <p class="text-xs text-gray-600">Set reasonable thresholds. You control how many alerts you receive.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</body>
+</html>

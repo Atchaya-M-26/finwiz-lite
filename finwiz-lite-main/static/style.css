@@ -1,0 +1,28 @@
+.file-input {
+    border: 2px dashed #d1d5db;
+    border-radius: 12px;
+    padding: 2rem;
+    text-align: center;
+    transition: all 0.3s ease;
+    background: linear-gradient(145deg, #f8fafc, #f1f5f9);
+}
+
+.file-input:hover {
+    border-color: #3b82f6;
+    background: linear-gradient(145deg, #f1f5f9, #e2e8f0);
+}
+
+.file-input::-webkit-file-upload-button {
+    visibility: hidden;
+}
+
+.file-input::before {
+    content: "📄 Choose PDF file";
+    display: inline-block;
+    padding: 0.5rem 1rem;
+    background: linear-gradient(45deg, #3b82f6, #8b5cf6);
+    color: white;
+    border-radius: 9999px;
+    font-weight: 600;
+    cursor: pointer;
+}

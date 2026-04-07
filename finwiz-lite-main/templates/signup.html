@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Sign up – FinWiz Lite</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen">
+  <div class="bg-white rounded-xl shadow p-8 w-full max-w-md">
+    <h1 class="text-2xl font-bold mb-4 text-center">Create your account</h1>
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        <div class="mb-4 text-sm text-red-600">
+          {% for m in messages %}<p>{{ m }}</p>{% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+    <form method="POST">
+      <div class="mb-4">
+        <label class="block text-sm mb-1">Name</label>
+        <input name="name" type="text" class="w-full border rounded px-3 py-2" required />
+      </div>
+      <div class="mb-4">
+        <label class="block text-sm mb-1">Email</label>
+        <input name="email" type="email" class="w-full border rounded px-3 py-2" required />
+      </div>
+      <div class="mb-4">
+        <label class="block text-sm mb-1">Password</label>
+        <input name="password" type="password" class="w-full border rounded px-3 py-2" required />
+      </div>
+      <div class="mb-6">
+        <label class="block text-sm mb-1">Confirm password</label>
+        <input name="confirm" type="password" class="w-full border rounded px-3 py-2" required />
+      </div>
+      <button class="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700">
+        Sign up
+      </button>
+    </form>
+    <p class="mt-4 text-xs text-center text-gray-600">
+      Already have an account?
+      <a href="{{ url_for('login') }}" class="text-green-600">Log in</a>
+    </p>
+  </div>
+</body>
+</html>

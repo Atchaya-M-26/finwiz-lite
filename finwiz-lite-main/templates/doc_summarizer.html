@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>FinWiz Lite – Doc Summarizer</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
+</head>
+<body class="bg-white min-h-screen flex flex-col">
+
+  <!-- Top nav similar to linnk.ai -->
+  <nav class="w-full flex items-center justify-between px-8 py-4 border-b">
+    <div class="flex items-center space-x-2">
+      <span class="text-2xl font-black tracking-tight">FinWiz</span>
+      <span class="text-xs bg-gray-100 px-2 py-0.5 rounded-full text-gray-600">Lite</span>
+    </div>
+    <div class="flex items-center space-x-6 text-sm">
+      <a href="{{ url_for('landing') }}" class="text-gray-700 hover:text-black">Tools</a>
+      <a href="{{ url_for('pricing') if 'pricing' in current_app.view_functions else '#' }}" class="text-gray-700 hover:text-black">
+        Pricing
+      </a>
+      {% if session.get('user_id') %}
+        <a href="{{ url_for('dashboard') }}" class="text-gray-700 hover:text-black">Dashboard</a>
+      {% endif %}
+      {% if not session.get('user_id') %}
+        <a href="{{ url_for('login') }}" class="px-4 py-1 border rounded text-gray-700 hover:bg-gray-50">Sign In</a>
+        <a href="{{ url_for('signup') }}" class="px-4 py-1 rounded bg-black text-white hover:bg-gray-800">
+          Get Started
+        </a>
+      {% else %}
+        <a href="{{ url_for('logout') }}" class="px-4 py-1 rounded bg-black text-white hover:bg-gray-800">
+          Logout
+        </a>
+      {% endif %}
+    </div>
+  </nav>
+
+  <!-- Hero + Drop zone -->
+  <main class="flex-1 px-4 md:px-16 py-10">
+    <div class="max-w-5xl mx-auto">
+      <h1 class="text-4xl md:text-5xl font-extrabold text-gray-900 leading-tight mb-4">
+        AI‑Powered Doc Summarizer:<br />
+        <span class="text-gray-800">Transform Large Files Into Concise Insights</span>
+      </h1>
+      <p class="text-gray-600 max-w-3xl mb-8">
+        Upload financial PDFs or other supported documents, extract key information, and generate clean summaries in seconds.
+      </p>
+
+      <!-- Drop zone: this posts to your existing /dashboard upload -->
+      <div class="border-2 border-dashed border-blue-200 rounded-3xl py-16 px-4 text-center bg-blue-50/40">
+        <form
+          method="POST"
+          enctype="multipart/form-data"
+          action="{{ url_for('dashboard') if session.get('user_id') else url_for('login') }}"
+        >
+          <div class="flex flex-col items-center space-y-4">
+            <div class="w-14 h-14 rounded-full bg-blue-100 flex items-center justify-center">
+              <span class="text-3xl text-blue-500">📄</span>
+            </div>
+            <p class="text-lg font-medium text-gray-800">Drop file anywhere</p>
+            <p class="text-sm text-gray-500">or</p>
+            <label
+              class="inline-block cursor-pointer bg-blue-500 text-white px-6 py-2 rounded-lg text-sm font-semibold hover:bg-blue-600"
+            >
+              Choose your file
+              <input type="file" name="file" accept=".pdf,.doc,.docx,.pptx,.csv,.txt" class="hidden" />
+            </label>
+            {% if not session.get('user_id') %}
+              <p class="text-xs text-red-500 mt-2">
+                You need to log in to analyze files. Clicking “Choose your file” will redirect to login after upload.
+              </p>
+            {% endif %}
+            <p class="mt-4 text-xs text-gray-400">
+              Supported formats: PDF, PPTX, DOCX, CSV, TXT (FinWiz Lite focuses on financial PDFs first).
+            </p>
+          </div>
+          <input type="hidden" name="mode" value="quick" />
+        </form>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer similar style -->
+  <footer class="bg-gray-900 text-gray-300 mt-10">
+    <div class="max-w-6xl mx-auto px-6 py-10 grid md:grid-cols-4 gap-8 text-sm">
+      <div>
+        <div class="flex items-center space-x-2 mb-3">
+          <span class="text-xl font-black text-white">FinWiz</span>
+          <span class="text-xs bg-gray-800 px-2 py-0.5 rounded-full">Lite</span>
+        </div>
+        <p class="text-xs text-gray-400">
+          Analyze and simplify your financial documents with AI‑assisted tools.
+        </p>
+      </div>
+      <div>
+        <h3 class="font-semibold text-white mb-2">Solutions</h3>
+        <ul class="space-y-1">
+          <li>Bank Statement Analyzer</li>
+          <li>Loan & EMI Insights</li>
+          <li>Insurance Summarizer</li>
+        </ul>
+      </div>
+      <div>
+        <h3 class="font-semibold text-white mb-2">Support</h3>
+        <ul class="space-y-1">
+          <li>Guides</li>
+          <li>FAQ</li>
+          <li>Contact</li>
+        </ul>
+      </div>
+      <div>
+        <h3 class="font-semibold text-white mb-2">Company</h3>
+        <ul class="space-y-1">
+          <li>About</li>
+          <li>Blog</li>
+          <li>Careers</li>
+        </ul>
+      </div>
+    </div>
+    <div class="border-t border-gray-800 text-center py-4 text-xs text-gray-500">
+      © {{ 2025 }} FinWiz Lite. All rights reserved.
+    </div>
+  </footer>
+</body>
+</html>

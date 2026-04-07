@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Upgrade to Premium – FinWiz Lite</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
+</head>
+<body class="bg-gradient-to-br from-purple-50 to-pink-50 min-h-screen py-12">
+  <div class="container mx-auto px-4 max-w-md">
+    <!-- Back button -->
+    <a href="{{ url_for('dashboard') }}" class="inline-flex items-center text-sm text-gray-600 hover:text-gray-900 mb-8">
+      ← Back to Dashboard
+    </a>
+
+    <!-- Premium Card -->
+    <div class="bg-white rounded-3xl shadow-2xl p-8 text-center">
+      <div class="w-24 h-24 bg-gradient-to-r from-purple-500 to-pink-500 rounded-3xl flex items-center justify-center mx-auto mb-6">
+        <span class="text-4xl font-bold text-white">⭐</span>
+      </div>
+      
+      <h1 class="text-3xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-4">
+        Go Premium
+      </h1>
+      
+      <p class="text-gray-600 mb-8 text-lg">Unlock unlimited uploads, charts, budgets & more</p>
+
+      <!-- Pricing -->
+      <div class="bg-gradient-to-r from-purple-50 to-pink-50 rounded-2xl p-6 mb-8">
+        <div class="text-4xl font-bold text-gray-900 mb-2">₹199</div>
+        <div class="text-sm text-gray-500">per month (billed yearly)</div>
+        <ul class="text-left text-sm text-gray-700 mt-6 space-y-2">
+          <li class="flex items-center">✅ Unlimited file uploads</li>
+          <li class="flex items-center">✅ Interactive charts & analytics</li>
+          <li class="flex items-center">✅ Budget tracking</li>
+          <li class="flex items-center">✅ Priority support</li>
+        </ul>
+      </div>
+
+      <!-- Payment Methods -->
+      <form method="POST" action="{{ url_for('upgrade_confirm') }}" class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Choose payment method</label>
+          <div class="grid grid-cols-2 gap-3">
+            <label class="flex items-center p-3 border-2 border-gray-200 rounded-xl hover:border-purple-300 cursor-pointer">
+              <input type="radio" name="payment_method" value="Razorpay" class="mr-3 text-purple-600" required>
+              <div>
+                <div class="font-medium text-sm">Razorpay</div>
+                <div class="text-xs text-gray-500">UPI/Cards/Netbanking</div>
+              </div>
+            </label>
+            <label class="flex items-center p-3 border-2 border-gray-200 rounded-xl hover:border-pink-300 cursor-pointer">
+              <input type="radio" name="payment_method" value="Stripe" class="mr-3 text-pink-600" required>
+              <div>
+                <div class="font-medium text-sm">Stripe</div>
+                <div class="text-xs text-gray-500">Cards/Apple Pay</div>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <button type="submit" 
+                class="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-4 rounded-2xl text-lg font-semibold shadow-xl hover:from-purple-700 hover:to-pink-700 transform hover:-translate-y-0.5 transition-all duration-200">
+          🔒 Secure Checkout
+        </button>
+      </form>
+
+      <div class="mt-8 p-4 bg-gray-50 rounded-xl">
+        <p class="text-xs text-gray-500 text-center">Powered by Razorpay & Stripe | 100% secure</p>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
