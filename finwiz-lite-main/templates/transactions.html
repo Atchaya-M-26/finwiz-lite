@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-4 md:p-6">
+    <div class="max-w-6xl mx-auto">
+        <!-- Header -->
+        <div class="mb-8">
+            <h1 class="text-4xl font-bold text-gray-800 mb-2">💰 Transaction History</h1>
+            <p class="text-gray-600">View and filter all your transactions</p>
+        </div>
+
+        <!-- Stats Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+            <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-green-500">
+                <p class="text-gray-600 text-sm font-semibold">Total Income</p>
+                <p class="text-3xl font-bold text-green-600">₹{{ "%.2f"|format(total_income) }}</p>
+            </div>
+            <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-red-500">
+                <p class="text-gray-600 text-sm font-semibold">Total Expenses</p>
+                <p class="text-3xl font-bold text-red-600">₹{{ "%.2f"|format(total_expense) }}</p>
+            </div>
+            <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-blue-500">
+                <p class="text-gray-600 text-sm font-semibold">Total Transactions</p>
+                <p class="text-3xl font-bold text-blue-600">{{ transaction_count }}</p>
+            </div>
+        </div>
+
+        <!-- Filters Section -->
+        <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+            <h2 class="text-xl font-bold text-gray-800 mb-4">🔍 Filters</h2>
+            <form method="GET" class="flex flex-col md:flex-row gap-4">
+                <!-- Search -->
+                <div class="flex-1">
+                    <input type="text" name="search" placeholder="Search transactions..." 
+                           value="{{ search_query }}" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500">
+                </div>
+
+                <!-- Type Filter -->
+                <div>
+                    <select name="type" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500">
+                        <option value="all" {% if filter_type == 'all' %}selected{% endif %}>All Types</option>
+                        <option value="income" {% if filter_type == 'income' %}selected{% endif %}>Income</option>
+                        <option value="expense" {% if filter_type == 'expense' %}selected{% endif %}>Expense</option>
+                    </select>
+                </div>
+
+                <!-- Sort -->
+                <div>
+                    <select name="sort" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500">
+                        <option value="date_desc" {% if sort_by == 'date_desc' %}selected{% endif %}>Newest First</option>
+                        <option value="date_asc" {% if sort_by == 'date_asc' %}selected{% endif %}>Oldest First</option>
+                        <option value="amount_desc" {% if sort_by == 'amount_desc' %}selected{% endif %}>Amount (High to Low)</option>
+                        <option value="amount_asc" {% if sort_by == 'amount_asc' %}selected{% endif %}>Amount (Low to High)</option>
+                    </select>
+                </div>
+
+                <!-- Submit -->
+                <button type="submit" class="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-semibold">
+                    Apply Filters
+                </button>
+            </form>
+        </div>
+
+        <!-- Transactions Table -->
+        <div class="bg-white rounded-lg shadow-md overflow-hidden">
+            {% if transactions %}
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead>
+                            <tr class="bg-gray-100 border-b">
+                                <th class="px-6 py-4 text-left font-semibold text-gray-700">Date</th>
+                                <th class="px-6 py-4 text-left font-semibold text-gray-700">Description</th>
+                                <th class="px-6 py-4 text-left font-semibold text-gray-700">Category</th>
+                                <th class="px-6 py-4 text-left font-semibold text-gray-700">Amount</th>
+                                <th class="px-6 py-4 text-left font-semibold text-gray-700">Source</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for transaction in transactions %}
+                            <tr class="border-b hover:bg-gray-50 transition">
+                                <td class="px-6 py-4 text-gray-800">{{ transaction.get('date', 'N/A') }}</td>
+                                <td class="px-6 py-4 text-gray-800">{{ transaction.get('description', 'N/A')[:50] }}</td>
+                                <td class="px-6 py-4">
+                                    <span class="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-semibold">
+                                        {{ transaction.get('category', 'N/A') }}
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 font-bold {% if transaction.get('amount', 0)|float > 0 %}text-green-600{% else %}text-red-600{% endif %}">
+                                    {% if transaction.get('amount', 0)|float > 0 %}+{% endif %}₹{{ "%.2f"|format(transaction.get('amount', 0)|float) }}
+                                </td>
+                                <td class="px-6 py-4 text-gray-600 text-sm">
+                                    <a href="{{ url_for('view_file', file_id=transaction.get('file_id', '')) }}" class="text-green-600 hover:underline">
+                                        {{ transaction.get('file_name', 'N/A')[:30] }}
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="p-12 text-center">
+                    <p class="text-gray-600 text-lg">📭 No transactions found</p>
+                    <p class="text-gray-500">Upload a PDF file to see transactions</p>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Back Button -->
+        <div class="mt-8">
+            <a href="{{ url_for('dashboard') }}" class="inline-block px-6 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600">
+                ← Back to Dashboard
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

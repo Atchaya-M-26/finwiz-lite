@@ -2,14 +2,170 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>{% block title %}FinWiz Lite{% endblock %}</title>
+  <title>{% block title %}FinWiz Lite - Financial Document Analysis{% endblock %}</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="FinWiz Lite - Analyze financial documents with AI-powered insights">
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
+  <style>
+    /* Dark Mode Support */
+    body.dark-mode {
+      background-color: #1a1a1a;
+      color: #e5e7eb;
+    }
+    
+    body.dark-mode .bg-white {
+      background-color: #2d2d2d;
+    }
+    
+    body.dark-mode .text-gray-800 {
+      color: #e5e7eb;
+    }
+    
+    body.dark-mode .text-gray-700 {
+      color: #d1d5db;
+    }
+    
+    body.dark-mode .text-gray-600 {
+      color: #9ca3af;
+    }
+    
+    body.dark-mode .bg-gray-50 {
+      background-color: #1f1f1f;
+    }
+    
+    body.dark-mode .bg-gray-100 {
+      background-color: #2d2d2d;
+    }
+    
+    body.dark-mode .border-gray-300 {
+      border-color: #404040;
+    }
+    
+    body.dark-mode .bg-gray-200 {
+      background-color: #404040;
+    }
+    
+    /* Responsive tweaks */
+    @media (max-width: 640px) {
+      .sidebar-collapse {
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.3s ease-out;
+      }
+      
+      .sidebar-collapse.open {
+        max-height: 500px;
+      }
+    }
+  </style>
 </head>
-<body class="bg-white min-h-screen flex flex-col">
+<body class="bg-white min-h-screen flex flex-col {% if session.get('dark_mode') %}dark-mode{% endif %}">
 
+  <!-- Navigation Bar -->
+  {% if session.get('user_id') %}
+  <nav class="bg-gradient-to-r from-green-600 to-green-700 text-white shadow-lg sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between items-center h-16">
+        <!-- Logo -->
+        <div class="flex items-center space-x-2">
+          <a href="{{ url_for('dashboard') }}" class="text-2xl font-bold flex items-center">
+            💚 FinWiz Lite
+          </a>
+        </div>
+
+        <!-- Desktop Navigation -->
+        <div class="hidden md:flex items-center space-x-1">
+          <a href="{{ url_for('dashboard') }}" class="px-3 py-2 rounded-md hover:bg-green-500 transition">📊 Dashboard</a>
+          <a href="{{ url_for('transactions') }}" class="px-3 py-2 rounded-md hover:bg-green-500 transition">💰 Transactions</a>
+          <a href="{{ url_for('reports') }}" class="px-3 py-2 rounded-md hover:bg-green-500 transition">📈 Reports</a>
+          <a href="{{ url_for('email_alerts') }}" class="px-3 py-2 rounded-md hover:bg-green-500 transition">🔔 Alerts</a>
+          <a href="{{ url_for('archive') }}" class="px-3 py-2 rounded-md hover:bg-green-500 transition">📁 Archive</a>
+        </div>
+
+        <!-- User Menu & Mobile Toggle -->
+        <div class="flex items-center space-x-4">
+          <!-- Dark Mode Toggle -->
+          <button onclick="toggleDarkMode()" class="p-2 rounded-md hover:bg-green-500 transition text-xl">
+            {% if session.get('dark_mode') %}🌞{% else %}🌙{% endif %}
+          </button>
+
+          <!-- User Dropdown -->
+          <div class="relative group hidden md:block">
+            <button class="flex items-center space-x-2 px-3 py-2 rounded-md hover:bg-green-500 transition">
+              <span>👤 {{ session.get('user_name', 'User') }}</span>
+              <span>▼</span>
+            </button>
+            <div class="absolute right-0 mt-2 w-48 bg-white text-gray-800 rounded-md shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition">
+              <a href="{{ url_for('profile') }}" class="block px-4 py-2 hover:bg-gray-100">👤 Profile</a>
+              <a href="{{ url_for('change_password') }}" class="block px-4 py-2 hover:bg-gray-100">🔐 Change Password</a>
+              <hr>
+              <a href="{{ url_for('logout') }}" class="block px-4 py-2 hover:bg-red-100 text-red-600">🚪 Logout</a>
+            </div>
+          </div>
+
+          <!-- Mobile Menu Button -->
+          <button onclick="toggleMobileMenu()" class="md:hidden p-2 rounded-md hover:bg-green-500">
+            ☰
+          </button>
+        </div>
+      </div>
+
+      <!-- Mobile Navigation -->
+      <div id="mobile-menu" class="sidebar-collapse md:hidden pb-4">
+        <a href="{{ url_for('dashboard') }}" class="block px-3 py-2 rounded-md hover:bg-green-500">📊 Dashboard</a>
+        <a href="{{ url_for('transactions') }}" class="block px-3 py-2 rounded-md hover:bg-green-500">💰 Transactions</a>
+        <a href="{{ url_for('reports') }}" class="block px-3 py-2 rounded-md hover:bg-green-500">📈 Reports</a>
+        <a href="{{ url_for('email_alerts') }}" class="block px-3 py-2 rounded-md hover:bg-green-500">🔔 Alerts</a>
+        <a href="{{ url_for('archive') }}" class="block px-3 py-2 rounded-md hover:bg-green-500">📁 Archive</a>
+        <hr class="my-2 border-green-500">
+        <a href="{{ url_for('profile') }}" class="block px-3 py-2 rounded-md hover:bg-green-500">👤 Profile</a>
+        <a href="{{ url_for('change_password') }}" class="block px-3 py-2 rounded-md hover:bg-green-500">🔐 Change Password</a>
+        <a href="{{ url_for('logout') }}" class="block px-3 py-2 rounded-md hover:bg-red-500">🚪 Logout</a>
+      </div>
+    </div>
+  </nav>
+  {% endif %}
+
+  <!-- Flash Messages -->
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, message in messages %}
+        <div class="max-w-7xl mx-auto px-4 mt-4 w-full">
+          <div class="p-4 rounded-lg {% if category == 'error' %}bg-red-100 border border-red-400 text-red-700{% elif category == 'success' %}bg-green-100 border border-green-400 text-green-700{% else %}bg-blue-100 border border-blue-400 text-blue-700{% endif %} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="float-right" onclick="this.parentElement.style.display='none';">✕</button>
+          </div>
+        </div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+
+  <!-- Main Content -->
   {% block content %}{% endblock %}
 
+  <!-- Footer -->
   {% include "footer.html" %}
+
+  <!-- JavaScript -->
+  <script>
+    function toggleMobileMenu() {
+      const menu = document.getElementById('mobile-menu');
+      menu.classList.toggle('open');
+    }
+
+    function toggleDarkMode() {
+      document.body.classList.toggle('dark-mode');
+      // Save preference to session
+      fetch('/toggle-dark-mode', { method: 'POST' });
+    }
+
+    // Close alerts after 5 seconds
+    setTimeout(() => {
+      const alerts = document.querySelectorAll('.alert-dismissible');
+      alerts.forEach(alert => {
+        alert.style.display = 'none';
+      });
+    }, 5000);
+  </script>
 </body>
 </html>

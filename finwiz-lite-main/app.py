@@ -16,10 +16,12 @@ from models import users_collection, files_collection
 from werkzeug.utils import secure_filename
 from flask_bcrypt import Bcrypt
 from flask_mail import Mail, Message
+from flask_wtf.csrf import CSRFProtect
 import os
 import json
 import csv
 import io
+import secrets
 from dotenv import load_dotenv
 
 # Load environment variables from .env file
@@ -35,7 +37,9 @@ from models import (
 )
 
 app = Flask(__name__)
-app.config["SECRET_KEY"] = "change-this-secret-key"
+# Use environment variable for SECRET_KEY, fallback to generated secret
+app.config["SECRET_KEY"] = os.getenv("SECRET_KEY", secrets.token_hex(32))
+csrf = CSRFProtect(app)
 app.config["UPLOAD_FOLDER"] = "uploads"
 app.config["MAX_CONTENT_LENGTH"] = 16 * 1024 * 1024  # 16 MB per request
 
@@ -90,6 +94,46 @@ def login_required(func):
 
     return wrapper
 
+# -------------- Error Handlers & Validation --------------
+
+def validate_email(email):
+    """Validate email format."""
+    import re
+    pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+    return re.match(pattern, email) is not None
+
+def validate_password(password):
+    """Validate password strength (min 8 chars, 1 uppercase, 1 number)."""
+    if len(password) < 8:
+        return False, "Password must be at least 8 characters"
+    if not any(c.isupper() for c in password):
+        return False, "Password must contain at least 1 uppercase letter"
+    if not any(c.isdigit() for c in password):
+        return False, "Password must contain at least 1 number"
+    return True, "Valid"
+
+def handle_db_error(e):
+    """Handle database errors gracefully."""
+    print(f"Database error: {e}")
+    flash("Database error occurred. Please try again.", "error")
+    return None
+
+@app.errorhandler(404)
+def not_found(error):
+    """Handle 404 errors."""
+    return render_template("error.html", error_code=404, message="Page not found"), 404
+
+@app.errorhandler(500)
+def internal_error(error):
+    """Handle 500 errors."""
+    print(f"Internal error: {error}")
+    return render_template("error.html", error_code=500, message="Server error. Please try again."), 500
+
+@app.errorhandler(403)
+def forbidden(error):
+    """Handle 403 errors."""
+    return render_template("error.html", error_code=403, message="Access forbidden"), 403
+
 # -------------- Routes --------------
 
 @app.route("/")
@@ -106,25 +150,44 @@ def signup():
         password = request.form.get("password")
         confirm = request.form.get("confirm")
 
-        if not name or not email or not password:
-            flash("All fields are required.")
+        # Validate inputs
+        if not name or len(name) < 2:
+            flash("Name must be at least 2 characters.", "error")
+            return redirect(url_for("signup"))
+        
+        if not email or not validate_email(email):
+            flash("Please enter a valid email address.", "error")
+            return redirect(url_for("signup"))
+
+        if not password:
+            flash("Password is required.", "error")
+            return redirect(url_for("signup"))
+        
+        is_valid, msg = validate_password(password)
+        if not is_valid:
+            flash(msg, "error")
             return redirect(url_for("signup"))
 
         if password != confirm:
-            flash("Passwords do not match.")
+            flash("Passwords do not match.", "error")
             return redirect(url_for("signup"))
 
         existing = find_user_by_email(email)
         if existing:
-            flash("Account already exists for this email. Please log in.")
+            flash("Account already exists for this email. Please log in.", "error")
             return redirect(url_for("login"))
 
-        pw_hash = bcrypt.generate_password_hash(password).decode("utf-8")
-        result = create_user(name, email, pw_hash)
-        session["user_id"] = str(result.inserted_id)
-        session["user_name"] = name
-        flash("Signup successful. Welcome to FinWiz Lite!")
-        return redirect(url_for("dashboard"))
+        try:
+            pw_hash = bcrypt.generate_password_hash(password).decode("utf-8")
+            result = create_user(name, email, pw_hash)
+            session["user_id"] = str(result.inserted_id)
+            session["user_name"] = name
+            flash("✅ Signup successful. Welcome to FinWiz Lite!", "success")
+            return redirect(url_for("dashboard"))
+        except Exception as e:
+            flash("Error creating account. Please try again.", "error")
+            print(f"Signup error: {e}")
+            return redirect(url_for("signup"))
 
     return render_template("signup.html")
 
@@ -134,17 +197,24 @@ def login():
         email = request.form.get("email", "").strip().lower()
         password = request.form.get("password")
 
-        user = find_user_by_email(email)
-        if not user or not bcrypt.check_password_hash(
-            user["password_hash"], password
-        ):
-            flash("Incorrect email or password.")
+        if not email or not password:
+            flash("Email and password are required.", "error")
             return redirect(url_for("login"))
 
-        session["user_id"] = str(user["_id"])
-        session["user_name"] = user.get("name", "User")
-        flash("Logged in successfully.")
-        return redirect(url_for("dashboard"))
+        try:
+            user = find_user_by_email(email)
+            if not user or not bcrypt.check_password_hash(user["password_hash"], password):
+                flash("❌ Incorrect email or password.", "error")
+                return redirect(url_for("login"))
+
+            session["user_id"] = str(user["_id"])
+            session["user_name"] = user.get("name", "User")
+            flash("✅ Logged in successfully.", "success")
+            return redirect(url_for("dashboard"))
+        except Exception as e:
+            flash("Error during login. Please try again.", "error")
+            print(f"Login error: {e}")
+            return redirect(url_for("login"))
 
     return render_template("login.html")
 
@@ -591,6 +661,249 @@ def email_alerts():
         alert_large_transaction=user_alerts.get("alert_large_transaction", 10000),
         alert_monthly_budget=user_alerts.get("alert_monthly_budget", 50000)
     )
+
+# ============== MVP FEATURES ==============
+
+# TRANSACTIONS HISTORY
+@app.route("/transactions")
+@login_required
+def transactions():
+    """View all transactions across all uploaded files"""
+    user = current_user()
+    search_query = request.args.get("search", "").strip()
+    filter_type = request.args.get("type", "all")  # all, income, expense
+    sort_by = request.args.get("sort", "date_desc")  # date_asc, date_desc, amount_asc, amount_desc
+    
+    all_files = list(get_files_for_user(user["_id"]))
+    all_transactions = []
+    
+    for file_doc in all_files:
+        if file_doc.get("archived", False):
+            continue
+        
+        filepath = os.path.join(app.config["UPLOAD_FOLDER"], file_doc["filename"])
+        if not os.path.exists(filepath):
+            continue
+        
+        try:
+            _, _, _, df, analytics = process_pdf_summary(filepath, style="simple", mode="quick", lang="en")
+            if df is not None and not df.empty:
+                df['file_id'] = str(file_doc["_id"])
+                df['file_name'] = file_doc["original_filename"]
+                all_transactions.extend(df.to_dict(orient="records"))
+        except Exception as e:
+            print(f"Error processing file {file_doc['filename']}: {e}")
+            continue
+    
+    # Apply filters
+    if filter_type == "income":
+        all_transactions = [t for t in all_transactions if float(t.get("amount", 0)) > 0]
+    elif filter_type == "expense":
+        all_transactions = [t for t in all_transactions if float(t.get("amount", 0)) < 0]
+    
+    # Apply search
+    if search_query:
+        all_transactions = [
+            t for t in all_transactions 
+            if search_query.lower() in str(t).lower()
+        ]
+    
+    # Apply sorting
+    if sort_by == "date_asc":
+        all_transactions.sort(key=lambda x: x.get("date", ""), reverse=False)
+    elif sort_by == "date_desc":
+        all_transactions.sort(key=lambda x: x.get("date", ""), reverse=True)
+    elif sort_by == "amount_asc":
+        all_transactions.sort(key=lambda x: float(x.get("amount", 0)))
+    elif sort_by == "amount_desc":
+        all_transactions.sort(key=lambda x: float(x.get("amount", 0)), reverse=True)
+    
+    income_total = sum(float(t.get("amount", 0)) for t in all_transactions if float(t.get("amount", 0)) > 0)
+    expense_total = abs(sum(float(t.get("amount", 0)) for t in all_transactions if float(t.get("amount", 0)) < 0))
+    
+    return render_template(
+        "transactions.html",
+        user=user,
+        transactions=all_transactions[:500],  # Limit to 500 for performance
+        total_income=income_total,
+        total_expense=expense_total,
+        transaction_count=len(all_transactions),
+        search_query=search_query,
+        filter_type=filter_type,
+        sort_by=sort_by
+    )
+
+# FINANCIAL REPORTS
+@app.route("/reports")
+@login_required
+def reports():
+    """View financial reports and summaries"""
+    user = current_user()
+    report_period = request.args.get("period", "monthly")  # monthly, yearly, all
+    
+    all_files = list(get_files_for_user(user["_id"]))
+    all_stats = {
+        "total_income": 0,
+        "total_expense": 0,
+        "total_transactions": 0,
+        "by_category": {},
+        "by_month": {},
+    }
+    
+    for file_doc in all_files:
+        if file_doc.get("archived", False):
+            continue
+        
+        filepath = os.path.join(app.config["UPLOAD_FOLDER"], file_doc["filename"])
+        if not os.path.exists(filepath):
+            continue
+        
+        try:
+            _, _, _, df, analytics = process_pdf_summary(filepath, style="simple", mode="quick", lang="en")
+            if analytics:
+                all_stats["total_income"] += analytics.get("total_income", 0)
+                all_stats["total_expense"] += analytics.get("total_expense", 0)
+                
+                # Merge category data
+                for cat, amount in analytics.get("by_category", {}).items():
+                    all_stats["by_category"][cat] = all_stats["by_category"].get(cat, 0) + amount
+            
+            if df is not None and not df.empty:
+                all_stats["total_transactions"] += len(df)
+        except Exception as e:
+            print(f"Error processing file for reports {file_doc['filename']}: {e}")
+            continue
+    
+    all_stats["net_savings"] = all_stats["total_income"] - all_stats["total_expense"]
+    all_stats["savings_percentage"] = (all_stats["net_savings"] / all_stats["total_income"] * 100) if all_stats["total_income"] > 0 else 0
+    
+    return render_template(
+        "reports.html",
+        user=user,
+        stats=all_stats,
+        report_period=report_period
+    )
+
+# USER PROFILE
+@app.route("/profile")
+@login_required
+def profile():
+    """User profile page"""
+    user = current_user()
+    file_count = len(list(get_files_for_user(user["_id"])))
+    
+    return render_template(
+        "profile.html",
+        user=user,
+        file_count=file_count,
+        joined_date=user.get("created_at", datetime.now(timezone.utc)).strftime("%B %d, %Y")
+    )
+
+# CHANGE PASSWORD
+@app.route("/change-password", methods=["GET", "POST"])
+@login_required
+def change_password():
+    """Change password"""
+    user = current_user()
+    
+    if request.method == "POST":
+        current_pwd = request.form.get("current_password")
+        new_pwd = request.form.get("new_password")
+        confirm_pwd = request.form.get("confirm_password")
+        
+        # Validate current password
+        if not bcrypt.check_password_hash(user["password_hash"], current_pwd):
+            flash("❌ Current password is incorrect.", "error")
+            return redirect(url_for("change_password"))
+        
+        # Validate new password strength
+        is_valid, msg = validate_password(new_pwd)
+        if not is_valid:
+            flash(msg, "error")
+            return redirect(url_for("change_password"))
+        
+        # Validate confirmation
+        if new_pwd != confirm_pwd:
+            flash("New passwords do not match.", "error")
+            return redirect(url_for("change_password"))
+        
+        try:
+            new_hash = bcrypt.generate_password_hash(new_pwd).decode("utf-8")
+            users_collection.update_one(
+                {"_id": user["_id"]},
+                {"$set": {"password_hash": new_hash}}
+            )
+            flash("✅ Password changed successfully!", "success")
+            return redirect(url_for("dashboard"))
+        except Exception as e:
+            flash("Error changing password. Please try again.", "error")
+            print(f"Password change error: {e}")
+            return redirect(url_for("change_password"))
+    
+    return render_template("change_password.html", user=user)
+
+# UPDATE PROFILE WITH DARK MODE PREFERENCE
+@app.route("/update_profile", methods=["POST"])
+@login_required
+def update_profile():
+    """Update user profile including dark mode preference"""
+    user = current_user()
+    name = request.form.get("name", user["name"]).strip()
+    dark_mode = request.form.get("dark_mode") == "on"
+    preferred_lang = request.form.get("preferred_lang", user.get("preferred_lang", "en"))
+    preferred_currency = request.form.get("preferred_currency", user.get("preferred_currency", "INR"))
+    
+    if not name or len(name) < 2:
+        flash("Name must be at least 2 characters.", "error")
+        return redirect(url_for("profile"))
+    
+    try:
+        users_collection.update_one(
+            {"_id": user["_id"]},
+            {"$set": {
+                "name": name,
+                "dark_mode": dark_mode,
+                "preferred_lang": preferred_lang,
+                "preferred_currency": preferred_currency
+            }}
+        )
+        session["user_name"] = name
+        if dark_mode:
+            session["dark_mode"] = True
+        else:
+            session.pop("dark_mode", None)
+        
+        flash("✅ Profile updated successfully!", "success")
+        return redirect(url_for("profile"))
+    except Exception as e:
+        flash("Error updating profile. Please try again.", "error")
+        print(f"Profile update error: {e}")
+        return redirect(url_for("profile"))
+
+# TOGGLE DARK MODE
+@app.route("/toggle-dark-mode", methods=["POST"])
+@login_required
+def toggle_dark_mode():
+    """Toggle dark mode preference"""
+    user = current_user()
+    current_mode = session.get("dark_mode", False)
+    new_mode = not current_mode
+    
+    try:
+        users_collection.update_one(
+            {"_id": user["_id"]},
+            {"$set": {"dark_mode": new_mode}}
+        )
+        
+        if new_mode:
+            session["dark_mode"] = True
+        else:
+            session.pop("dark_mode", None)
+        
+        return jsonify({"success": True, "dark_mode": new_mode})
+    except Exception as e:
+        print(f"Dark mode toggle error: {e}")
+        return jsonify({"success": False}), 500
 
 if __name__ == "__main__":
     app.run(debug=True)

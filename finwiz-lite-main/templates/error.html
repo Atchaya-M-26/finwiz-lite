@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-4 md:p-6 flex items-center justify-center">
+    <div class="text-center">
+        <!-- Error Code -->
+        <div class="text-9xl font-bold text-red-500 mb-4">
+            {{ error_code }}
+        </div>
+
+        <!-- Error Message -->
+        <h1 class="text-4xl font-bold text-gray-800 mb-4">
+            {% if error_code == 404 %}
+                🔍 Page Not Found
+            {% elif error_code == 500 %}
+                ⚠️ Server Error
+            {% elif error_code == 403 %}
+                🚫 Access Forbidden
+            {% else %}
+                Error
+            {% endif %}
+        </h1>
+
+        <p class="text-xl text-gray-600 mb-8">{{ message }}</p>
+
+        <!-- Detailed Messages -->
+        <div class="bg-white rounded-lg shadow-md p-8 max-w-md mx-auto mb-8 text-left">
+            {% if error_code == 404 %}
+                <p class="text-gray-700 mb-4">The page you're looking for doesn't exist. Here are some helpful links:</p>
+                <ul class="space-y-2 text-gray-600">
+                    <li>📊 View your <a href="{{ url_for('dashboard') }}" class="text-green-600 hover:underline">Dashboard</a></li>
+                    <li>💰 Check your <a href="{{ url_for('transactions') }}" class="text-green-600 hover:underline">Transactions</a></li>
+                    <li>📈 Review your <a href="{{ url_for('reports') }}" class="text-green-600 hover:underline">Reports</a></li>
+                </ul>
+            {% elif error_code == 500 %}
+                <p class="text-gray-700 mb-4">Something went wrong on our end. Please try again later.</p>
+                <ul class="space-y-2 text-gray-600">
+                    <li>✓ Refresh the page</li>
+                    <li>✓ Clear your browser cache</li>
+                    <li>✓ Try again in a few minutes</li>
+                    <li>✓ Contact support if the problem persists</li>
+                </ul>
+            {% elif error_code == 403 %}
+                <p class="text-gray-700 mb-4">You don't have permission to access this resource.</p>
+                <ul class="space-y-2 text-gray-600">
+                    <li>✓ Make sure you're logged in</li>
+                    <li>✓ Check your account permissions</li>
+                    <li>✓ Contact support for assistance</li>
+                </ul>
+            {% endif %}
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="space-y-4 flex flex-col md:flex-row gap-4 justify-center">
+            <a href="{{ url_for('dashboard') }}" class="px-8 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 font-bold">
+                📊 Go to Dashboard
+            </a>
+            <a href="javascript:history.back()" class="px-8 py-3 bg-gray-500 text-white rounded-lg hover:bg-gray-600 font-bold">
+                ← Go Back
+            </a>
+        </div>
+
+        <!-- Support Info -->
+        <div class="mt-12 p-6 bg-blue-50 rounded-lg max-w-md mx-auto border border-blue-200">
+            <p class="text-blue-800 font-semibold">Need Help?</p>
+            <p class="text-blue-700 text-sm mt-2">Error Code: {{ error_code }}</p>
+            <p class="text-blue-700 text-sm">Contact our support team at support@finwiz.com</p>
+        </div>
+    </div>
+</div>
+{% endblock %}

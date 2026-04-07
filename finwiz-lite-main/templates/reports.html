@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-4 md:p-6">
+    <div class="max-w-6xl mx-auto">
+        <!-- Header -->
+        <div class="mb-8">
+            <h1 class="text-4xl font-bold text-gray-800 mb-2">📊 Financial Reports</h1>
+            <p class="text-gray-600">Comprehensive analysis of your finances</p>
+        </div>
+
+        <!-- Summary Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+            <div class="bg-gradient-to-br from-green-400 to-green-600 rounded-lg shadow-lg p-6 text-white">
+                <p class="text-green-100 text-sm font-semibold">Total Income</p>
+                <p class="text-3xl font-bold mt-2">₹{{ "%.0f"|format(stats.total_income) }}</p>
+                <p class="text-green-100 text-xs mt-2">All time</p>
+            </div>
+
+            <div class="bg-gradient-to-br from-red-400 to-red-600 rounded-lg shadow-lg p-6 text-white">
+                <p class="text-red-100 text-sm font-semibold">Total Expenses</p>
+                <p class="text-3xl font-bold mt-2">₹{{ "%.0f"|format(stats.total_expense) }}</p>
+                <p class="text-red-100 text-xs mt-2">All time</p>
+            </div>
+
+            <div class="bg-gradient-to-br from-blue-400 to-blue-600 rounded-lg shadow-lg p-6 text-white">
+                <p class="text-blue-100 text-sm font-semibold">Net Savings</p>
+                <p class="text-3xl font-bold mt-2">₹{{ "%.0f"|format(stats.net_savings) }}</p>
+                <p class="text-blue-100 text-xs mt-2">{% if stats.savings_percentage > 0 %}{{ "%.1f"|format(stats.savings_percentage) }}% saved{% else %}Deficit{% endif %}</p>
+            </div>
+
+            <div class="bg-gradient-to-br from-purple-400 to-purple-600 rounded-lg shadow-lg p-6 text-white">
+                <p class="text-purple-100 text-sm font-semibold">Transactions</p>
+                <p class="text-3xl font-bold mt-2">{{ stats.total_transactions }}</p>
+                <p class="text-purple-100 text-xs mt-2">Analyzed</p>
+            </div>
+        </div>
+
+        <!-- Key Insights -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            <!-- Spending by Category -->
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <h2 class="text-xl font-bold text-gray-800 mb-4">💳 Spending by Category</h2>
+                {% if stats.by_category %}
+                    <div class="space-y-4">
+                        {% for category, amount in stats.by_category|dictsort(by='value', reverse=true)|list %}
+                            {% set percentage = (amount / stats.total_expense * 100) if stats.total_expense > 0 else 0 %}
+                            <div>
+                                <div class="flex justify-between mb-2">
+                                    <span class="font-semibold text-gray-700">{{ category }}</span>
+                                    <span class="text-gray-800 font-bold">₹{{ "%.0f"|format(amount) }}</span>
+                                </div>
+                                <div class="w-full bg-gray-200 rounded-full h-2">
+                                    <div class="bg-red-500 h-2 rounded-full" style="width: {{ percentage }}%"></div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="text-gray-600">No category data available</p>
+                {% endif %}
+            </div>
+
+            <!-- Financial Health -->
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <h2 class="text-xl font-bold text-gray-800 mb-4">📈 Financial Health</h2>
+                <div class="space-y-4">
+                    <div>
+                        <p class="text-gray-700 font-semibold mb-2">Income to Expense Ratio</p>
+                        {% if stats.total_expense > 0 %}
+                            {% set ratio = stats.total_income / stats.total_expense %}
+                            <p class="text-3xl font-bold text-green-600">{{ "%.2f"|format(ratio) }}x</p>
+                            <p class="text-gray-600 text-sm mt-2">
+                                {% if ratio > 1.5 %}✅ Excellent money management{% elif ratio > 1 %}✅ Good savings rate{% else %}⚠️ Review expenses{% endif %}
+                            </p>
+                        {% else %}
+                            <p class="text-gray-600">No expenses recorded</p>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="pt-4 border-t">
+                        <p class="text-gray-700 font-semibold mb-2">Savings Rate</p>
+                        <p class="text-3xl font-bold {% if stats.savings_percentage > 0 %}text-blue-600{% else %}text-red-600{% endif %}">
+                            {{ "%.1f"|format(stats.savings_percentage) }}%
+                        </p>
+                        <p class="text-gray-600 text-sm mt-2">
+                            {% if stats.savings_percentage > 30 %}🎉 Excellent savings rate!{% elif stats.savings_percentage > 10 %}💪 Good savings habits{% elif stats.savings_percentage > 0 %}📚 Keep improving{% else %}⚠️ Spending exceeds income{% endif %}
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Top Insights -->
+        <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+            <h2 class="text-xl font-bold text-gray-800 mb-4">💡 Quick Insights</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="p-4 bg-yellow-50 border-l-4 border-yellow-400 rounded">
+                    <p class="font-semibold text-yellow-800">💰 Most Spent Category</p>
+                    {% if stats.by_category %}
+                        {% set top_category = stats.by_category|dictsort(by='value', reverse=true)|list|first %}
+                        <p class="text-gray-700 mt-2">{{ top_category[0] }} - ₹{{ "%.0f"|format(top_category[1]) }}</p>
+                    {% endif %}
+                </div>
+                <div class="p-4 bg-blue-50 border-l-4 border-blue-400 rounded">
+                    <p class="font-semibold text-blue-800">📊 Average per Transaction</p>
+                    {% if stats.total_transactions > 0 %}
+                        {% set avg = stats.total_expense / stats.total_transactions %}
+                        <p class="text-gray-700 mt-2">₹{{ "%.0f"|format(avg) }}</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Export Option -->
+        <div class="bg-green-50 border-l-4 border-green-400 rounded-lg p-6 mb-8">
+            <p class="text-green-800 font-semibold">✅ Reports Generated</p>
+            <p class="text-green-700 mt-2">Use the Transaction History or export features to download detailed reports.</p>
+        </div>
+
+        <!-- Back Button -->
+        <div class="mt-8">
+            <a href="{{ url_for('dashboard') }}" class="inline-block px-6 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600">
+                ← Back to Dashboard
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
